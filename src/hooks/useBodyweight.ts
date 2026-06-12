@@ -1,5 +1,5 @@
 import { BodyweightRepository } from '@/database/bodyweightRepository';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function useBodyweight() {
     const [logs, setLogs] = useState<any[]>([]);
@@ -7,10 +7,42 @@ export function useBodyweight() {
     const fetchLogs = async () => {
         try {
             const data = await BodyweightRepository.findAll();
-            const dd = calcWeeklyAvg();
             setLogs(data);
         } catch (error) {
-            console.error("Erro ao carregar logs:", error);
+            console.error("Error loading logs:", error);
+        }
+    };
+
+    const removeLog = async (id: number) => {
+        try {
+            await BodyweightRepository.remove(id);
+            await fetchLogs();
+        } catch (error) {
+            console.error("Error deleting log:", error);
+        }
+    };
+
+    const updateLog = async (id: number, weightStr: string) => {
+        if (!weightStr) return false;
+        try {
+            await BodyweightRepository.update(id, parseFloat(weightStr));
+            await fetchLogs();
+            return true;
+        } catch (error) {
+            console.error("Error updating log:", error);
+            return false;
+        }
+    };
+
+    const addLog = async (date: string, weightStr: string) => {
+        if (!weightStr) return false;
+        try {
+            await BodyweightRepository.create(date, parseFloat(weightStr));
+            await fetchLogs();
+            return true;
+        } catch (error) {
+            console.error("Error saving weight:", error);
+            return false;
         }
     };
 
@@ -23,37 +55,48 @@ export function useBodyweight() {
         const now = new Date();
         const currentDay = now.getDay() === 0 ? 7 : now.getDay();
 
-        // Encontra o início do dia da Segunda-feira atual
         const monday = new Date(now);
         monday.setDate(now.getDate() - currentDay + 1);
         monday.setHours(0, 0, 0, 0);
 
         const currentWeekLogs = logs.filter(log => {
-            // Converte a string "DD/MM/YY" de volta para Date
             const [day, month, year] = log.date.split('/');
             const logDate = new Date(2000 + Number(year), Number(month) - 1, Number(day));
-
             return logDate >= monday;
         });
 
         if (currentWeekLogs.length === 0) return 0;
-
         const total = currentWeekLogs.reduce((sum, log) => sum + log.weight, 0);
         return total / currentWeekLogs.length;
     };
 
-    const addLog = async (date: string, weightStr: string) => {
-        if (!weightStr) return false;
+    const weeklyData = useMemo(() => {
+        const groups: Record<string, any[]> = {};
 
-        try {
-            await BodyweightRepository.create(date, parseFloat(weightStr));
-            await fetchLogs();
-            return true;
-        } catch (error) {
-            console.error("Erro ao salvar peso:", error);
-            return false;
-        }
-    };
+        logs.forEach(log => {
+            const [day, month, year] = log.date.split('/');
+            const date = new Date(2000 + Number(year), Number(month) - 1, Number(day));
+            const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay();
 
-    return { logs, addLog };
+            const monday = new Date(date);
+            monday.setDate(date.getDate() - dayOfWeek + 1);
+            const weekKey = monday.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+            if (!groups[weekKey]) groups[weekKey] = [];
+            groups[weekKey].push(log);
+        });
+
+        return Object.entries(groups).map(([weekStart, entries]) => {
+            const avg = entries.reduce((sum, e) => sum + e.weight, 0) / entries.length;
+
+            return {
+                id: weekStart,
+                weekStart, // Data da segunda-feira da semana
+                avg: avg.toFixed(1),
+                entries
+            };
+        });
+    }, [logs]);
+
+    return { weeklyData, addLog, removeLog, updateLog, calcWeeklyAvg };
 }
