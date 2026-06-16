@@ -6,8 +6,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Layout } from '@/constants/layout';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { useBodyweight } from '@/hooks/use-bodyweight';
 import { useTheme } from '@/hooks/use-theme';
-import { useBodyweight } from '@/hooks/useBodyweight';
 import { showToast } from '@/utils/toast';
 
 export default function BodyweightScreen() {
@@ -18,7 +18,7 @@ export default function BodyweightScreen() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<string[]>([]);
 
-  const { weeklyData, addLog, removeLog, updateLog } = useBodyweight();
+  const { weeklyData, addLog, removeLog, updateLog, checkEntryToday } = useBodyweight();
 
   const dateTime = new Date();
   const date = dateTime.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
@@ -26,12 +26,20 @@ export default function BodyweightScreen() {
   const handleSave = async () => {
     if (editingId) {
       const success = await updateLog(editingId, number);
+
       if (success) {
         showToast("Log updated!", theme);
         setEditingId(null);
         onChangeNumber('');
       }
     } else {
+      const alreadyLogged = await checkEntryToday();
+
+      if (alreadyLogged) {
+        Alert.alert(`Already logged!`, `You have already registered your weight today. (${date}).`);
+        return;
+      }
+
       const success = await addLog(date, number);
       if (success) {
         showToast("Bodyweight logged!", theme);
@@ -97,6 +105,7 @@ export default function BodyweightScreen() {
         )}
       </View>
 
+
       <FlatList
         data={weeklyData}
         keyExtractor={(item) => item.id}
@@ -119,7 +128,7 @@ export default function BodyweightScreen() {
                 activeOpacity={0.7}
               >
                 <ThemedText type="default">
-                  {item.weekStart} - {item.avg} kg
+                  {item.weekStart} - {item.avg} kg ({item.count} Entr{item.count > 1 ? 'ies' : 'y'})
                 </ThemedText>
               </TouchableOpacity>
 

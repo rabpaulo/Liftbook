@@ -42,8 +42,8 @@ xcrun simctl install booted build/Build/Products/Release-iphonesimulator/LiftBoo
 xcrun simctl launch booted <your.bundle.identifier>
 ```
 ## TODO
-1. Use toast
-2. Implement local DB
+1. Add video/image to log
+2. Add export bodyweight log as CSV
 
 ### Future features:
 Online sync via login.

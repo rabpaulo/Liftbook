@@ -15,6 +15,16 @@ export const BodyweightRepository = {
     const db = await SQLite.openDatabaseAsync('liftbook.db');
     await db.runAsync('UPDATE bodyweight SET weight = ? WHERE id = ?', weight, id);
   },
+
+  async existsByDate(date: string) {
+    const db = await SQLite.openDatabaseAsync('liftbook.db');
+    const result = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM bodyweight WHERE date = ?', 
+      [date]
+    );
+    return (result?.count || 0) > 0;
+  },
+
   async findAll() {
     const db = await SQLite.openDatabaseAsync('liftbook.db');
     const allRows = await db.getAllAsync('SELECT * FROM bodyweight ORDER BY id DESC');
