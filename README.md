@@ -41,9 +41,6 @@ ideviceinstaller -i build/YourApp.ipa
 xcrun simctl install booted build/Build/Products/Release-iphonesimulator/LiftBook.app
 xcrun simctl launch booted <your.bundle.identifier>
 ```
-## TODO
-1. Add video/image to log
-2. Add export bodyweight log as CSV
 
 ### Future features:
 Online sync via login.
