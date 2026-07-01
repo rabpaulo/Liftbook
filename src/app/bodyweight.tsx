@@ -1,22 +1,19 @@
-import { ImageRepository } from "@/database/repositories/imageRepository";
-import { FontAwesome } from "@expo/vector-icons";
-import * as FileSystem from 'expo-file-system/legacy';
-import * as ImagePicker from 'expo-image-picker';
 import { useState } from "react";
+
 import {
   Alert,
   FlatList,
-  Platform,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import WeightStatsCard from "@/components/WeightStatsCard";
 import { Layout } from "@/constants/layout";
-import { BottomTabInset, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useBodyweight } from "@/hooks/use-bodyweight";
 import { useTheme } from "@/hooks/use-theme";
 import { showToast } from "@/utils/toast";
@@ -29,89 +26,58 @@ export default function BodyweightScreen() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<string[]>([]);
 
-  const { weeklyData, addLog, removeLog, updateLog, checkEntryToday } =
-    useBodyweight();
+  const { weeklyData, addLog, removeLog, updateLog, checkEntryToday } = useBodyweight();
 
+  {/*
+   LOOKOUT FOR THIS
+   Pretty sure this is going to break because of the start and end of week
+   Being different from the hook
+  */}
   const dateTime = new Date();
+  const dayOfWeek = dateTime.getDay(); // 0 (Dom) a 6 (Sáb)
   const date = dateTime.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "2-digit",
   });
+  const diff = dateTime.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
 
-async function pickAndSaveImage() {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (permission.status !== 'granted') {
-    Alert.alert('Permission required', 'Permission to access photos is required.');
-    return null;
-  }
+  const weekStart = new Date(dateTime);
+  weekStart.setDate(diff);
 
-  const res: any = await ImagePicker.launchImageLibraryAsync({
-    quality: 0.8,
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  const weekStartDate = weekStart.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
   });
 
-  // handle both old (cancelled, uri) and new (canceled, assets[]) APIs
-  if (res.cancelled === true || res.canceled === true) return null;
-
-  const asset = res.assets?.[0] ?? null;
-  const uri = res.uri ?? asset?.uri;
-  if (!uri) return null;
-
-  // Prefer to copy files on native platforms. 
-  // On web, expo-file-system may not support copyAsync — fallback to using original URI.
-  const filename = uri.split('/').pop() ?? asset?.fileName ?? `img_${Date.now()}.jpg`;
-  const width = res.width ?? asset?.width ?? null;
-  const height = res.height ?? asset?.height ?? null;
-
-  const canCopy = Platform.OS !== 'web' && typeof FileSystem.copyAsync === 'function';
-  if (canCopy) {
-    const dest = FileSystem.documentDirectory + filename;
-    try {
-      await FileSystem.copyAsync({ from: uri, to: dest });
-      return { uri: dest, width, height, filename };
-    } catch (e) {
-      // fallback to original uri if copy fails
-      return { uri, width, height, filename };
-    }
-  }
-
-  // Web or unsupported platform: don't copy, return original uri
-  return { uri, width, height, filename };
-}
   const handleSave = async () => {
-    // 1. Barra valores vazios imediatamente
     if (!number || number.trim() === "") {
-      Alert.alert("Error", "Please enter a weight.");
+      showToast("Error", "You can't log an empty weight.", theme, "error");
       return;
     }
-    // 2. Converte vírgula para ponto e transforma em número real
     const weightNumber = parseFloat(number.replace(",", "."));
-    // 3. Verifica se a conversão falhou (ex: o usuário colou um texto bizarro)
     if (isNaN(weightNumber) || weightNumber <= 0) {
-      Alert.alert("Error", "Please enter a valid numeric weight.");
+      showToast("Error", "You are trying to log an invalid number.", theme, "error");
       return;
     }
     if (editingId) {
       const success = await updateLog(editingId, weightNumber);
       if (success) {
-        showToast("Log updated!", theme);
+        showToast("Success", "Your weight log has been updated.", theme, "success");
         setEditingId(null);
         onChangeNumber("");
       }
     } else {
       const alreadyLogged = await checkEntryToday();
       if (alreadyLogged) {
-        Alert.alert(
-          `Already logged!`,
-          `You have already registered your weight today. (${date}).`,
-        );
+        showToast("Error", "You have already registered your weight today.", theme, "error");
         return;
       }
 
       const success = await addLog(date, weightNumber);
       if (success) {
-        showToast("Bodyweight logged!", theme);
+        showToast("Success", "Your weight log has been added.", theme, "success");
         onChangeNumber("");
       }
     }
@@ -149,70 +115,12 @@ async function pickAndSaveImage() {
         styles.container,
         {
           paddingTop: safeAreaInsets.top,
-          paddingBottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
+          paddingBottom: safeAreaInsets.bottom - Spacing.five,
           paddingHorizontal: Spacing.four,
         },
       ]}
     >
-      <View style={styles.row}>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              color: theme.text,
-              borderColor: theme.textSecondary,
-              fontFamily: 'Inter-SemiBold',
-            },
-          ]}
-          onChangeText={onChangeNumber}
-          value={number}
-          placeholder="Bodyweight (KGs)"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="numeric"
-        />
-
-        {/* Image picker: picks and saves to app storage + DB */}
-        <TouchableOpacity
-          onPress={async () => {
-            try {
-              const img = await pickAndSaveImage();
-              if (!img) return;
-              await ImageRepository.create(img.uri, img.filename ?? null, img.width ?? null, img.height ?? null);
-              showToast('Image saved!', theme);
-            } catch (err) {
-              console.error("Error saving image:", err);
-              Alert.alert('Error', 'Could not save image.');
-            }
-          }}
-        >
-          <FontAwesome name="file-picture-o" size={20} color={theme.textSecondary} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            { backgroundColor: theme.backgroundElement },
-          ]}
-          onPress={handleSave}
-        >
-          <ThemedText>{editingId ? "Update" : "Save"}</ThemedText>
-        </TouchableOpacity>
-
-        {editingId !== null && (
-          <TouchableOpacity
-            style={[styles.saveButton, { backgroundColor: "transparent" }]}
-            onPress={() => {
-              setEditingId(null);
-              onChangeNumber("");
-            }}
-          >
-            <ThemedText style={{ color: theme.textSecondary }}>
-              Cancel
-            </ThemedText>
-          </TouchableOpacity>
-        )}
-      </View>
-
+      <WeightStatsCard/>
       <FlatList
         data={weeklyData}
         keyExtractor={(item) => item.id}
@@ -228,7 +136,7 @@ async function pickAndSaveImage() {
                 style={{
                   padding: Layout.padding,
                   borderColor: theme.textSecondary,
-                  borderWidth: 2,
+                  borderWidth: 1,
                   borderRadius: Layout.radius,
                   backgroundColor: theme.backgroundElement,
                   alignItems: "center",
@@ -237,26 +145,50 @@ async function pickAndSaveImage() {
                 activeOpacity={0.7}
               >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+
                   {/* Left side: Date and Entries count */}
-                  <View style={{ alignItems: 'flex-start', gap: 2 }}>
-                    <ThemedText type="default">{item.weekStart}</ThemedText>
+                  <View style={{ flex: 1, alignItems: 'flex-start', gap: 2 }}>
+                    <ThemedText type="default">{item.id}</ThemedText>
                     <ThemedText style={{ fontSize: 12, color: theme.textSecondary }}>
                       {item.count} {item.count === 1 ? 'Entry' : 'Entries'}
                     </ThemedText>
                   </View>
 
-                  {/* Right side: Average and Up/Down indicator */}
-                  <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                  {/* Middle side: Average and Up/Down indicator */}
+                  <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
                     <ThemedText type="default">{item.avg} kg</ThemedText>
-                    <ThemedText
-                      style={{
-                        fontSize: 12,
-                        // Red for weight gain, Green for weight loss. Change if your goal is gaining weight.
-                        //color: item.diff > 0 ? '#ef4444' : item.diff < 0 ? '#22c55e' : theme.textSecondary
-                      }}
-                    >
-                      {item.diff > 0 ? `▲ +${item.diff} kg` : item.diff < 0 ? `▼ -${item.diff} kg` : ` 0 kg`}
+                    <ThemedText style={{ fontSize: 12 }}>
+                      {item.diff > 0 ? `▲ +${item.diff} kg` : item.diff < 0 ? `▼ -${Math.abs(item.diff)} kg` : `+0 kg`}
                     </ThemedText>
+                  </View>
+
+                  {/* Right side: Input field */}
+                  <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                    {item.id == weekStartDate ? (
+                      < TextInput
+                        style={{
+                          color: theme.text,
+                          borderColor: theme.textSecondary,
+                          fontFamily: 'Inter-SemiBold',
+                          borderWidth: 1,
+                          borderRadius: 8,
+                          padding: 8,
+                          width: 80,
+                          textAlign: 'center',
+                        }}
+                        onChangeText={onChangeNumber}
+                        onSubmitEditing={() => handleSave()}
+                        value={number}
+                        placeholder="Log"
+                        placeholderTextColor={theme.textSecondary}
+                        keyboardType="numeric"
+                        returnKeyType="done"
+                      />
+                    ) : (
+                      <ThemedText style={{ fontSize: 14, color: theme.textSecondary }}>
+                        Log disabled
+                      </ThemedText>
+                    )}
                   </View>
                 </View>
               </TouchableOpacity>

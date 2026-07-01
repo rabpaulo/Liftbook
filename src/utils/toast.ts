@@ -1,15 +1,18 @@
 import Toast from 'react-native-toast-message';
 
 
-export const showToast = (text1: string, theme: any, text2?: string) => {
+export const showToast = (text1: string, text2: string, theme: any, type: string) => {
   Toast.show({
-    type: 'customToast',
+    type: type,
     text1: text1,
     text2: text2,
     position: 'top',
-    topOffset: 100,
+    topOffset: 30,
     visibilityTime: 2000,
     autoHide: true,
-    props: { backgroundColor: theme.backgroundElement, textColor: theme.text }, 
+    props: { 
+      backgroundColor: theme.backgroundElement,
+       textColor: theme.text
+    }, 
   });
 };

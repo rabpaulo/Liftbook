@@ -8,7 +8,7 @@ export async function initDB() {
     CREATE TABLE IF NOT EXISTS bodyweight (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
-        weight REAL NOT NULL
+        weight REAL NOT NULL,
         image_uri TEXT
     );
     `);

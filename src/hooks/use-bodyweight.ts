@@ -1,4 +1,4 @@
-import { BodyweightRepository } from "@/database/repositories/bodyweightRepository";
+import { BodyweightRepository, MockBodyweightRepository } from "@/database/repositories/bodyweightRepository";
 import { useEffect, useMemo, useState } from "react";
 
 export function useBodyweight() {
@@ -6,11 +6,28 @@ export function useBodyweight() {
 
   const fetchLogs = async () => {
     try {
-      const data = await BodyweightRepository.findAll();
+      let repo = process.env.EXPO_PUBLIC_DB === 'dev' ? MockBodyweightRepository : BodyweightRepository;
+      const data = await repo.findAll();
       setLogs(data);
     } catch (error) {
       console.error("Error loading logs:", error);
     }
+  };
+
+  { /*
+    add useCallback to fetchLogs to avoid unnecessary re-renders and potential infinite loops
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+  */}
+  const getLowestWeight = () => {
+    if (logs.length === 0) return null;
+    return logs.reduce((min, log) => (log.weight < min ? log.weight : min), logs[0].weight);
+  };
+  
+  const getHighestWeight = () => {
+    if (logs.length === 0) return null;
+    return logs.reduce((max, log) => (log.weight > max ? log.weight : max), logs[0].weight);
   };
 
   const removeLog = async (id: number) => {
@@ -107,19 +124,18 @@ export function useBodyweight() {
         const prevAvg =
           prevEntries.reduce((sum, e) => sum + e.weight, 0) /
           prevEntries.length;
-        diff = (avg - prevAvg).toFixed(1);
+        diff = (avg - prevAvg).toFixed(2);
       }
 
       return {
         id: weekStart,
         count,
-        weekStart,
-        avg: avg.toFixed(1),
-        diff, // Novo campo: positivo (ganho), negativo (perda) ou null
+        avg: avg.toFixed(2),
+        diff,
         entries,
       };
     });
   }, [logs]);
 
-  return { weeklyData, addLog, removeLog, updateLog, checkEntryToday };
+  return { weeklyData, addLog, removeLog, updateLog, checkEntryToday, getLowestWeight, getHighestWeight };
 }
