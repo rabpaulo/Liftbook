@@ -8,7 +8,7 @@
     "scheme": "Liftbook",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,18 +23,27 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#000000",
-          "android": {
-            "image": "./assets/images/liftbook-logo.png",
-            "imageWidth": 150
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 150,
+          "dark": {
+            "backgroundColor": "#FFFFFF",
+            "image": "./assets/images/splash-icon.png"
           }
         }
       ],
       "expo-sqlite",
-      "expo-image",
       "expo-font",
       "expo-status-bar",
-      "expo-web-browser"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Liftbook to attach videos to workout sets.",
+          "cameraPermission": "Allow Liftbook to record videos for workout sets.",
+          "microphonePermission": "Allow Liftbook to record audio with workout videos."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

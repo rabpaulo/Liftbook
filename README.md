@@ -4,7 +4,6 @@ A progressive overload tracker. Focused on simplicty and perfomance. Free for us
 ## Features
 - **No Ads & Offline-First** — A distraction-free experience that works entirely without an internet connection.
 - **Progressive Overload Tracking** — Log weight training sets with precision, including weight, reps, and RIR (Reps in Reserve).
-- **Cardio & Distance** — Specialized tracking for distance and time-based activities like running, cycling, or elliptical training.
 - **Bodyweight Management** — Monitor your physique with daily logs and automated weekly average calculations.
 - **Media Attachments** — Attach photos and videos to your entries for form reviews and physical progress tracking.
 - **Data Portability** — Take full control of your data with built-in CSV export and import functionality.
