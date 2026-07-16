@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
-import { useAppDialog } from "@/components/AppDialog";
 import { CategoryDropdown } from "@/components/CategoryDropdown";
 import { LiquidButton } from "@/components/LiquidButton";
 import { LiquidCard } from "@/components/LiquidCard";
@@ -22,26 +21,25 @@ export default function ExerciseLibraryScreen() {
   const [categories, setCategories] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [showArchived, setShowArchived] = useState(false);
   const [editing, setEditing] = useState<Exercise | "new" | null>(null);
 
   const load = useCallback(async () => {
     const [nextItems, nextCategories] = await Promise.all([
-      exerciseRepository.list({ search, category: category || null, includeArchived: showArchived }),
+      exerciseRepository.list({ search, category: category || null }),
       exerciseRepository.categories(),
     ]);
     setItems(nextItems);
     setCategories(nextCategories);
-  }, [category, search, showArchived]);
+  }, [category, search]);
   useEffect(() => {
     void Promise.all([
-      exerciseRepository.list({ search, category: category || null, includeArchived: showArchived }),
+      exerciseRepository.list({ search, category: category || null }),
       exerciseRepository.categories(),
     ]).then(([nextItems, nextCategories]) => {
       setItems(nextItems);
       setCategories(nextCategories);
     });
-  }, [category, search, showArchived]);
+  }, [category, search]);
 
   const hasFilters = Boolean(search.trim() || category);
 
@@ -58,10 +56,7 @@ export default function ExerciseLibraryScreen() {
         allowClear
         allowCreate={false}
       />
-      <Pressable onPress={() => setShowArchived((value) => !value)} style={styles.archiveToggle}>
-        <Ionicons name={showArchived ? "checkbox" : "square-outline"} size={22} color={theme.accent} />
-        <ThemedText type="smallBold">Show archived exercises</ThemedText>
-      </Pressable>
+      <ThemedText type="caption" themeColor="textSecondary">{items.length} exercise{items.length === 1 ? "" : "s"}</ThemedText>
       {items.length === 0 ? (
         <EmptyState
           title={hasFilters ? "No matching exercises" : "No exercises"}
@@ -72,12 +67,12 @@ export default function ExerciseLibraryScreen() {
         />
       ) : items.map((exercise) => (
         <Pressable key={exercise.id} onPress={() => setEditing(exercise)}>
-          <LiquidCard style={[styles.card, exercise.isArchived && { opacity: 0.65 }]}>
+          <LiquidCard style={styles.card}>
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
-                <ThemedText type="smallBold">{exercise.name}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">{exercise.category}{exercise.isArchived ? " · Archived" : ""}</ThemedText>
-                {exercise.notes ? <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>{exercise.notes}</ThemedText> : null}
+                <ThemedText type="bodyMedium">{exercise.name}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">{exercise.category}</ThemedText>
+                {exercise.notes ? <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>{exercise.notes}</ThemedText> : null}
               </View>
               <Ionicons name="create-outline" size={22} color={theme.textSecondary} />
             </View>
@@ -91,7 +86,6 @@ export default function ExerciseLibraryScreen() {
 
 function ExerciseEditor({ exercise, categories, onClose, onSaved }: { exercise: Exercise | null; categories: readonly string[]; onClose: () => void; onSaved: () => void }) {
   const theme = useTheme();
-  const { showDialog, showMessage } = useAppDialog();
   const [name, setName] = useState(exercise?.name ?? "");
   const [category, setCategory] = useState(exercise?.category ?? "");
   const [notes, setNotes] = useState(exercise?.notes ?? "");
@@ -112,44 +106,17 @@ function ExerciseEditor({ exercise, categories, onClose, onSaved }: { exercise: 
     }
   };
 
-  const toggleArchive = async () => {
-    if (!exercise) return;
-    const action = await showDialog({
-      title: exercise.isArchived ? "Restore exercise?" : "Archive exercise?",
-      message: exercise.isArchived
-        ? "It will return to the default exercise picker."
-        : "Historical workout snapshots will remain unchanged.",
-      icon: exercise.isArchived ? "refresh-outline" : "archive-outline",
-      actions: [
-        {
-          id: "confirm",
-          label: exercise.isArchived ? "Restore exercise" : "Archive exercise",
-          variant: exercise.isArchived ? "primary" : "destructive",
-        },
-        { id: "cancel", label: "Cancel", variant: "ghost" },
-      ],
-    });
-    if (action !== "confirm") return;
-    try {
-      await exerciseRepository.setArchived(exercise.id, !exercise.isArchived);
-      onSaved();
-    } catch (cause) {
-      await showMessage("Could not update exercise", cause instanceof Error ? cause.message : "Try again.");
-    }
-  };
-
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ThemedView style={styles.modal}>
-        <View style={styles.row}><ThemedText type="subtitle" style={{ flex: 1 }}>{exercise ? "Edit exercise" : "New exercise"}</ThemedText><Pressable onPress={onClose} accessibilityLabel="Close"><Ionicons name="close" size={28} color={theme.text} /></Pressable></View>
+        <View style={styles.row}><ThemedText type="title" style={{ flex: 1 }}>{exercise ? "Edit exercise" : "New exercise"}</ThemedText><Pressable onPress={onClose} accessibilityLabel="Close"><Ionicons name="close" size={28} color={theme.text} /></Pressable></View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.form}>
           <LiquidInput value={name} onChangeText={(value) => { setName(value); setWarning(null); }} placeholder="Exercise name" />
           <CategoryDropdown value={category} onChange={setCategory} categories={categories} />
           <LiquidInput value={notes} onChangeText={setNotes} placeholder="Setup notes or cues" multiline />
-          {warning ? <ThemedText type="small" themeColor="warning">{warning}</ThemedText> : null}
-          {error ? <ThemedText type="small" themeColor="danger">{error}</ThemedText> : null}
+          {warning ? <ThemedText type="caption" themeColor="warning">{warning}</ThemedText> : null}
+          {error ? <ThemedText type="caption" themeColor="danger">{error}</ThemedText> : null}
           <LiquidButton variant="primary" onPress={() => void save()}>{warning ? "Save anyway" : "Save exercise"}</LiquidButton>
-          {exercise ? <LiquidButton variant={exercise.isArchived ? "secondary" : "destructive"} onPress={() => void toggleArchive()}>{exercise.isArchived ? "Restore exercise" : "Archive exercise"}</LiquidButton> : null}
         </ScrollView>
       </ThemedView>
     </Modal>
@@ -157,9 +124,8 @@ function ExerciseEditor({ exercise, categories, onClose, onSaved }: { exercise: 
 }
 
 const styles = StyleSheet.create({
-  archiveToggle: { alignItems: "center", flexDirection: "row", gap: Spacing.two, minHeight: 44 },
-  card: { gap: Spacing.one },
-  row: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
-  modal: { flex: 1, gap: Spacing.three, padding: Spacing.three, paddingTop: Spacing.four },
-  form: { gap: Spacing.three, paddingBottom: Spacing.five },
+  card: { gap: Spacing.xs },
+  row: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
+  modal: { flex: 1, gap: Spacing.md, padding: Spacing.md, paddingTop: Spacing.lg },
+  form: { gap: Spacing.md, paddingBottom: Spacing.xl },
 });

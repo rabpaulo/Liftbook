@@ -169,8 +169,8 @@ export default function TodayWorkoutScreen() {
                 <Ionicons name="list" size={21} color={theme.text} />
               </View>
               <View style={styles.selectorCopy}>
-                <ThemedText type="smallBold" numberOfLines={1}>{selectedExercise.exerciseName}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+                <ThemedText type="bodyMedium" numberOfLines={1}>{selectedExercise.exerciseName}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">
                   Exercise {selectedIndex + 1} of {workout.exercises.length} · Swipe right from the edge
                 </ThemedText>
               </View>
@@ -230,13 +230,13 @@ function SelectedExerciseDetails({
     <LiquidCard style={styles.exerciseCard}>
       <View style={styles.exerciseHeader}>
         <View style={styles.exerciseTitle}>
-          <ThemedText type="subtitle">{exercise.exerciseName}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">{exercise.exerciseCategory}</ThemedText>
+          <ThemedText type="section">{exercise.exerciseName}</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">{exercise.exerciseCategory}</ThemedText>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel={`${exercise.exerciseName} options`} onPress={onMenu} style={styles.iconButton}><Ionicons name="ellipsis-horizontal" size={24} color={theme.text} /></Pressable>
       </View>
-      {exercise.exerciseNotes ? <View style={[styles.notes, { backgroundColor: theme.backgroundSelected }]}><Ionicons name="information-circle-outline" size={19} color={theme.textSecondary} /><ThemedText type="small" themeColor="textSecondary" style={{ flex: 1 }}>{exercise.exerciseNotes}</ThemedText></View> : null}
-      {exercise.previousSets?.length ? <ThemedText type="small" themeColor="textSecondary">Previous: {exercise.previousSets.map((set) => formatPrevious(set, weightUnit)).join(" · ")}</ThemedText> : <ThemedText type="small" themeColor="textSecondary">No previous completed performance</ThemedText>}
+      {exercise.exerciseNotes ? <View style={[styles.notes, { backgroundColor: theme.backgroundSelected }]}><Ionicons name="information-circle-outline" size={19} color={theme.textSecondary} /><ThemedText type="caption" themeColor="textSecondary" style={{ flex: 1 }}>{exercise.exerciseNotes}</ThemedText></View> : null}
+      {exercise.previousSets?.length ? <ThemedText type="caption" themeColor="textSecondary">Previous: {exercise.previousSets.map((set) => formatPrevious(set, weightUnit)).join(" · ")}</ThemedText> : <ThemedText type="caption" themeColor="textSecondary">No previous completed performance</ThemedText>}
       <View style={styles.sets}>
         <WorkoutSetTabs sets={exercise.sets} renderSet={(set, setIndex, tabbed) => (
           <WorkoutSetRow
@@ -259,7 +259,7 @@ function SelectedExerciseDetails({
 function ExerciseNotesModal({ exercise, onClose, onSave }: { exercise: SessionExercise; onClose: () => void; onSave: (notes: string) => Promise<void> }) {
   const theme = useTheme();
   const [value, setValue] = useState(exercise.exerciseNotes ?? "");
-  return <Modal visible transparent animationType="fade" onRequestClose={onClose}><View style={styles.overlay}><ThemedView style={[styles.dialog, { borderColor: theme.divider }]}><ThemedText type="subtitle">Setup notes</ThemedText><ThemedText type="small" themeColor="textSecondary">Only this workout snapshot is changed.</ThemedText><LiquidInput autoFocus multiline value={value} onChangeText={setValue} /><LiquidButton variant="primary" onPress={() => void onSave(value)}>Save notes</LiquidButton><LiquidButton variant="ghost" onPress={onClose}>Cancel</LiquidButton></ThemedView></View></Modal>;
+  return <Modal visible transparent animationType="fade" onRequestClose={onClose}><View style={styles.overlay}><ThemedView style={[styles.dialog, { borderColor: theme.divider }]}><ThemedText type="title">Setup notes</ThemedText><ThemedText type="body" themeColor="textSecondary">Only this workout snapshot is changed.</ThemedText><LiquidInput autoFocus multiline value={value} onChangeText={setValue} /><LiquidButton variant="primary" onPress={() => void onSave(value)}>Save notes</LiquidButton><LiquidButton variant="ghost" onPress={onClose}>Cancel</LiquidButton></ThemedView></View></Modal>;
 }
 
 function formatPrevious(set: WorkoutSet, unit: "kg" | "lbs") {
@@ -268,21 +268,21 @@ function formatPrevious(set: WorkoutSet, unit: "kg" | "lbs") {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  headerActions: { alignItems: "center", flexDirection: "row", gap: Spacing.one },
-  exerciseCard: { gap: Spacing.three },
-  exerciseHeader: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
+  headerActions: { alignItems: "center", flexDirection: "row", gap: Spacing.xs },
+  exerciseCard: { gap: Spacing.md },
+  exerciseHeader: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
   exerciseTitle: { flex: 1, minWidth: 0 },
   iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
   exerciseSelector: {
     alignItems: "center",
-    borderRadius: Radius.large,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     flexDirection: "row",
-    gap: Spacing.two,
+    gap: Spacing.sm,
     minHeight: 64,
-    padding: Spacing.two,
+    padding: Spacing.sm,
   },
-  selectorIcon: { alignItems: "center", borderRadius: Radius.medium, height: 44, justifyContent: "center", width: 44 },
+  selectorIcon: { alignItems: "center", borderRadius: Radius.md, height: 44, justifyContent: "center", width: 44 },
   selectorCopy: { flex: 1, minWidth: 0 },
   edgeGestureArea: {
     alignItems: "flex-start",
@@ -295,8 +295,8 @@ const styles = StyleSheet.create({
     zIndex: 30,
   },
   edgeHandle: { borderRadius: Radius.pill, height: 48, opacity: 0.38, width: 4 },
-  notes: { alignItems: "flex-start", borderRadius: Radius.medium, flexDirection: "row", gap: Spacing.two, padding: Spacing.two },
-  sets: { gap: Spacing.two },
-  overlay: { alignItems: "center", backgroundColor: "rgba(0,0,0,0.55)", flex: 1, justifyContent: "center", padding: Spacing.three },
-  dialog: { borderRadius: Radius.large, borderWidth: 1, gap: Spacing.three, maxWidth: 520, padding: Spacing.three, width: "100%" },
+  notes: { alignItems: "flex-start", borderRadius: Radius.md, flexDirection: "row", gap: Spacing.sm, padding: Spacing.sm },
+  sets: { gap: Spacing.sm },
+  overlay: { alignItems: "center", backgroundColor: "rgba(0,0,0,0.55)", flex: 1, justifyContent: "center", padding: Spacing.md },
+  dialog: { borderRadius: Radius.lg, borderWidth: 1, gap: Spacing.md, maxWidth: 520, padding: Spacing.md, width: "100%" },
 });

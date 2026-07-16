@@ -15,7 +15,6 @@ export type ExerciseRow = {
   notes: string | null;
   category: string;
   type: ExerciseType;
-  is_archived: number;
   created_at: string;
   updated_at: string;
 };
@@ -72,7 +71,6 @@ export function mapExercise(row: ExerciseRow): Exercise {
     notes: row.notes,
     category: row.category,
     type: row.type,
-    isArchived: row.is_archived === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

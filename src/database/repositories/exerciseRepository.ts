@@ -12,7 +12,6 @@ export type ExerciseInput = {
 export type ExerciseFilters = {
   search?: string;
   category?: string | null;
-  includeArchived?: boolean;
 };
 
 function cleanInput(input: ExerciseInput) {
@@ -27,7 +26,6 @@ export const exerciseRepository = {
   async list(filters: ExerciseFilters = {}): Promise<Exercise[]> {
     const conditions: string[] = ["type = 'weight_reps'"];
     const values: (string | number)[] = [];
-    if (!filters.includeArchived) conditions.push("is_archived = 0");
     if (filters.search?.trim()) {
       conditions.push("name LIKE ? COLLATE NOCASE");
       values.push(`%${filters.search.trim()}%`);
@@ -38,7 +36,7 @@ export const exerciseRepository = {
     }
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const rows = await db.getAllAsync<ExerciseRow>(
-      `SELECT * FROM exercises ${where} ORDER BY is_archived, name COLLATE NOCASE`,
+      `SELECT * FROM exercises ${where} ORDER BY name COLLATE NOCASE`,
       values,
     );
     return rows.map(mapExercise);
@@ -46,7 +44,7 @@ export const exerciseRepository = {
 
   async categories(): Promise<string[]> {
     const rows = await db.getAllAsync<{ category: string }>(
-      "SELECT DISTINCT category FROM exercises WHERE is_archived = 0 AND type = 'weight_reps' ORDER BY category COLLATE NOCASE",
+      "SELECT DISTINCT category FROM exercises WHERE type = 'weight_reps' ORDER BY category COLLATE NOCASE",
     );
     return rows.map((row) => row.category);
   },
@@ -69,11 +67,11 @@ export const exerciseRepository = {
     const id = createId();
     const now = new Date().toISOString();
     await db.runAsync(
-      `INSERT INTO exercises (id, name, notes, category, type, is_archived, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
+      `INSERT INTO exercises (id, name, notes, category, type, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [id, value.name, value.notes, value.category, value.type, now, now],
     );
-    return { id, ...value, isArchived: false, createdAt: now, updatedAt: now };
+    return { id, ...value, createdAt: now, updatedAt: now };
   },
 
   async update(id: string, input: ExerciseInput): Promise<Exercise> {
@@ -87,13 +85,5 @@ export const exerciseRepository = {
     const exercise = await this.findById(id);
     if (!exercise) throw new Error("Exercise not found.");
     return exercise;
-  },
-
-  async setArchived(id: string, archived: boolean) {
-    const result = await db.runAsync(
-      "UPDATE exercises SET is_archived = ?, updated_at = ? WHERE id = ?",
-      [archived ? 1 : 0, new Date().toISOString(), id],
-    );
-    if (result.changes === 0) throw new Error("Exercise not found.");
   },
 };

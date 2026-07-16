@@ -60,7 +60,7 @@ export function CategoryDropdown({
 
   return (
     <View style={styles.container}>
-      <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
+      <ThemedText type="label" themeColor="textSecondary">{label}</ThemedText>
       <View style={styles.row}>
         <Pressable
           accessibilityRole="button"
@@ -103,7 +103,7 @@ export function CategoryDropdown({
           <Pressable accessibilityLabel="Close category menu" style={StyleSheet.absoluteFill} onPress={closeMenu} />
           <ThemedView style={[styles.menu, { borderColor: theme.divider }]}>
             <View style={styles.menuHeader}>
-              <ThemedText type="subtitle">{label}</ThemedText>
+              <ThemedText type="section">{label}</ThemedText>
               <Pressable accessibilityLabel="Close category menu" onPress={closeMenu} style={styles.iconButton}>
                 <Ionicons name="close" size={24} color={theme.text} />
               </Pressable>
@@ -129,7 +129,7 @@ export function CategoryDropdown({
                 />
               ))}
               {filteredOptions.length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary" style={styles.emptySearch}>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.emptySearch}>
                   No matching categories
                 </ThemedText>
               ) : null}
@@ -150,24 +150,24 @@ function CategoryOption({ label, selected, onPress }: { label: string; selected:
       onPress={onPress}
       style={[styles.option, selected && { backgroundColor: theme.accentSoft }]}
     >
-      <ThemedText type="smallBold" style={{ flex: 1, color: selected ? theme.accent : theme.text }}>{label}</ThemedText>
+      <ThemedText type="label" style={{ flex: 1, color: selected ? theme.accent : theme.text }}>{label}</ThemedText>
       {selected ? <Ionicons name="checkmark" size={20} color={theme.accent} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: Spacing.one },
-  row: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
-  selector: { alignItems: "center", borderRadius: Radius.large, borderWidth: 1, flex: 1, flexDirection: "row", minHeight: 50, paddingHorizontal: Spacing.three },
-  addButton: { alignItems: "center", borderRadius: Radius.large, borderWidth: 1, height: 50, justifyContent: "center", width: 50 },
-  createRow: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
-  overlay: { alignItems: "center", backgroundColor: "rgba(0,0,0,0.55)", flex: 1, justifyContent: "center", padding: Spacing.three },
-  menu: { borderRadius: Radius.large, borderWidth: 1, maxHeight: "72%", maxWidth: 520, padding: Spacing.three, width: "100%" },
+  container: { gap: Spacing.xs },
+  row: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
+  selector: { alignItems: "center", borderRadius: Radius.md, borderWidth: 1, flex: 1, flexDirection: "row", minHeight: 50, paddingHorizontal: Spacing.md },
+  addButton: { alignItems: "center", borderRadius: Radius.md, borderWidth: 1, height: 50, justifyContent: "center", width: 50 },
+  createRow: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
+  overlay: { alignItems: "center", backgroundColor: "rgba(0,0,0,0.55)", flex: 1, justifyContent: "center", padding: Spacing.md },
+  menu: { borderRadius: Radius.lg, borderWidth: 1, maxHeight: "72%", maxWidth: 520, padding: Spacing.md, width: "100%" },
   menuHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
-  searchInput: { marginTop: Spacing.two },
-  options: { marginTop: Spacing.two },
-  option: { alignItems: "center", borderRadius: Radius.medium, flexDirection: "row", minHeight: 48, paddingHorizontal: Spacing.three },
-  emptySearch: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.four, textAlign: "center" },
+  searchInput: { marginTop: Spacing.sm },
+  options: { marginTop: Spacing.sm },
+  option: { alignItems: "center", borderRadius: Radius.md, flexDirection: "row", minHeight: 48, paddingHorizontal: Spacing.md },
+  emptySearch: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.lg, textAlign: "center" },
 });

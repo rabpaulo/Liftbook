@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 
 type LiquidHeaderProps = {
   title: string;
@@ -15,11 +15,11 @@ export function LiquidHeader({ title, subtitle, showBack = false, right }: Liqui
   return (
     <View style={styles.header}>
       <View style={styles.titleBlock}>
-        <ThemedText type={showBack ? "subtitle" : "title"} numberOfLines={2}>
+        <ThemedText type={showBack ? "title" : "display"} numberOfLines={2}>
           {title}
         </ThemedText>
         {subtitle ? (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="caption" themeColor="textSecondary">
             {subtitle}
           </ThemedText>
         ) : null}
@@ -33,12 +33,12 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: Spacing.sm,
     width: "100%",
   },
   titleBlock: {
     flex: 1,
-    gap: spacing.xs,
+    gap: Spacing.xs,
     minWidth: 0,
   },
   right: {

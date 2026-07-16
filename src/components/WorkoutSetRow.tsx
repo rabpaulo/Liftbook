@@ -5,7 +5,7 @@ import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import { useAppDialog, type AppDialogAction } from "@/components/AppDialog";
 import { ThemedText } from "@/components/themed-text";
-import { Radius, Spacing } from "@/constants/theme";
+import { Radius, Spacing, Typography } from "@/constants/theme";
 import { SegmentedControl } from "@/components/TrainingPrimitives";
 import type { WorkoutSetUpdate } from "@/database/repositories/workoutSetRepository";
 import { videoService } from "@/utils/video-service";
@@ -153,8 +153,8 @@ export function WorkoutSetRow({ set, personalRecord, previous, onUpdate, onDelet
     return (
       <View style={[styles.readOnly, { borderColor: theme.divider }]}>
         <View style={styles.readOnlySummary}>
-          {showPosition ? <ThemedText type="smallBold">{set.position + 1}</ThemedText> : null}
-          <ThemedText type="small" style={{ flex: 1 }}>
+          {showPosition ? <ThemedText type="label">{set.position + 1}</ThemedText> : null}
+          <ThemedText type="numeric" style={styles.readOnlyValue}>
             {`${set.weight === null ? "—" : formatWeight(set.weight, unit)} × ${set.repetitions ?? "—"}${set.rir === null ? "" : ` @ ${formatRir(set.rir)} RIR`}`}
           </ThemedText>
           <PersonalRecordBadge personalRecord={personalRecord} />
@@ -163,7 +163,7 @@ export function WorkoutSetRow({ set, personalRecord, previous, onUpdate, onDelet
         {set.comment ? (
           <View style={styles.savedComment}>
             <Ionicons name="chatbox-outline" size={17} color={theme.textSecondary} />
-            <ThemedText type="small" themeColor="textSecondary" style={{ flex: 1 }}>{set.comment}</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary" style={styles.flexText}>{set.comment}</ThemedText>
           </View>
         ) : null}
         {previewUri ? <VideoModal uri={previewUri} onClose={() => setPreviewUri(null)} /> : null}
@@ -174,8 +174,8 @@ export function WorkoutSetRow({ set, personalRecord, previous, onUpdate, onDelet
   return (
     <View style={[styles.container, { borderColor: set.isCompleted ? theme.success : theme.divider, backgroundColor: set.isCompleted ? theme.successSoft : theme.backgroundElement }]}>
       <View style={styles.topRow}>
-        {showPosition ? <View style={[styles.number, { backgroundColor: theme.backgroundSelected }]}><ThemedText type="smallBold">{set.position + 1}</ThemedText></View> : null}
-        {previous ? <ThemedText type="small" themeColor="textSecondary" numberOfLines={1} style={{ flex: 1 }}>Prev: {previous}</ThemedText> : <View style={{ flex: 1 }} />}
+        {showPosition ? <View style={[styles.number, { backgroundColor: theme.backgroundSelected }]}><ThemedText type="label">{set.position + 1}</ThemedText></View> : null}
+        {previous ? <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1} style={styles.flexText}>Prev: {previous}</ThemedText> : <View style={styles.flexText} />}
         <IconButton label={set.videoUri ? "Manage attached video" : "Attach video"} icon={set.videoUri ? "videocam" : "videocam-outline"} onPress={() => void videoMenu()} />
         <IconButton label="Delete set" icon="trash-outline" onPress={() => void deleteSet()} />
       </View>
@@ -197,7 +197,7 @@ export function WorkoutSetRow({ set, personalRecord, previous, onUpdate, onDelet
           onBlur={persistRepetitions}
         />
         <View style={styles.rir}>
-          <ThemedText type="small" themeColor="textSecondary">RIR</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">RIR</ThemedText>
           <SegmentedControl<RirValue>
             label="Repetitions in reserve"
             value={set.rir}
@@ -207,7 +207,7 @@ export function WorkoutSetRow({ set, personalRecord, previous, onUpdate, onDelet
         </View>
       </View>
       <View style={styles.commentField}>
-        <ThemedText type="small" themeColor="textSecondary">COMMENT</ThemedText>
+        <ThemedText type="caption" themeColor="textSecondary">COMMENT</ThemedText>
         <TextInput
           accessibilityLabel="Set comment"
           multiline
@@ -220,7 +220,7 @@ export function WorkoutSetRow({ set, personalRecord, previous, onUpdate, onDelet
           style={[styles.commentInput, { color: theme.text, borderColor: theme.divider, backgroundColor: theme.surfaceSoft }]}
         />
       </View>
-      {error ? <ThemedText type="small" themeColor="danger">{error}</ThemedText> : null}
+      {error ? <ThemedText type="caption" themeColor="danger">{error}</ThemedText> : null}
       {previewUri ? <VideoModal uri={previewUri} onClose={() => setPreviewUri(null)} /> : null}
     </View>
   );
@@ -234,7 +234,7 @@ function NumberField({ label, personalRecordLabel, ...props }: React.ComponentPr
   return (
     <View style={styles.field}>
       <View style={styles.fieldLabel}>
-        <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
+        <ThemedText type="caption" themeColor="textSecondary">{label}</ThemedText>
         {personalRecordLabel ? (
           <View accessible accessibilityLabel={personalRecordLabel} accessibilityRole="image">
             <Ionicons name="trophy" size={16} color={theme.accent} />
@@ -289,21 +289,38 @@ function VideoModal({ uri, onClose }: { uri: string; onClose: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  container: { borderRadius: Radius.large, borderWidth: 1, gap: Spacing.two, padding: Spacing.two },
-  topRow: { alignItems: "center", flexDirection: "row", gap: Spacing.one },
-  number: { alignItems: "center", borderRadius: Radius.small, height: 34, justifyContent: "center", width: 34 },
+  container: { borderRadius: Radius.lg, borderWidth: 1, gap: Spacing.md, padding: Spacing.md },
+  topRow: { alignItems: "center", flexDirection: "row", gap: Spacing.xs },
+  number: { alignItems: "center", borderRadius: Radius.sm, height: 34, justifyContent: "center", width: 34 },
   icon: { alignItems: "center", height: 44, justifyContent: "center", width: 38 },
   personalRecord: { alignItems: "center", borderRadius: Radius.pill, height: 34, justifyContent: "center", width: 34 },
-  fields: { alignItems: "flex-end", flexDirection: "row", flexWrap: "wrap", gap: Spacing.two },
-  field: { flexGrow: 1, gap: Spacing.one, minWidth: 86 },
-  fieldLabel: { alignItems: "center", flexDirection: "row", gap: Spacing.one },
-  input: { borderRadius: Radius.medium, borderWidth: 1, fontSize: 16, height: 44, minWidth: 80, paddingHorizontal: Spacing.two },
-  rir: { gap: Spacing.one },
-  commentField: { gap: Spacing.one },
-  commentInput: { borderRadius: Radius.medium, borderWidth: 1, fontSize: 15, minHeight: 72, paddingHorizontal: Spacing.two, paddingVertical: Spacing.two },
-  readOnly: { borderBottomWidth: 1, gap: Spacing.one, minHeight: 44, paddingVertical: Spacing.two },
-  readOnlySummary: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
-  savedComment: { alignItems: "flex-start", flexDirection: "row", gap: Spacing.one, paddingLeft: Spacing.three },
+  fields: { alignItems: "flex-end", flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+  field: { flexGrow: 1, gap: Spacing.xs, minWidth: 86 },
+  fieldLabel: { alignItems: "center", flexDirection: "row", gap: Spacing.xs },
+  input: {
+    ...Typography.numeric,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    height: 48,
+    minWidth: 80,
+    paddingHorizontal: Spacing.sm,
+    textAlign: "center",
+  },
+  rir: { gap: Spacing.xs },
+  commentField: { gap: Spacing.xs },
+  commentInput: {
+    ...Typography.body,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    minHeight: 72,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  readOnly: { borderBottomWidth: 1, gap: Spacing.xs, minHeight: 44, paddingVertical: Spacing.sm },
+  readOnlySummary: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
+  savedComment: { alignItems: "flex-start", flexDirection: "row", gap: Spacing.xs, paddingLeft: Spacing.md },
+  flexText: { flex: 1 },
+  readOnlyValue: { flex: 1 },
   videoModal: { backgroundColor: "#000000", flex: 1, justifyContent: "center" },
   video: { height: "75%", width: "100%" },
   closeVideo: { alignItems: "center", justifyContent: "center", position: "absolute", right: 16, top: 48, height: 48, width: 48 },

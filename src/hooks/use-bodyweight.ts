@@ -1,23 +1,31 @@
 import { BodyweightRepository } from "@/database/repositories/bodyweightRepository";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
+import {
+  formatLocalDate,
+  getActiveBodyweightPhase,
+  isValidBodyweightPhaseDraft,
+  normalizeBodyweightPhaseDraft,
+} from "@/utils/bodyweight-phases";
+import type {
+  BodyweightGoalSettings,
+  BodyweightLog,
+  BodyweightPhase,
+  BodyweightPhaseDraft,
+  BodyweightSettings,
+  WeightUnit,
+} from "@/utils/bodyweight-types";
 
-export type BodyweightGoal = "lose" | "maintain" | "gain";
-export type WeightUnit = "kg" | "lbs";
+export type {
+  BodyweightGoal,
+  BodyweightGoalSettings,
+  BodyweightLog,
+  BodyweightPhase,
+  BodyweightPhaseDraft,
+  BodyweightSettings,
+  WeightUnit,
+} from "@/utils/bodyweight-types";
 export type TrendStatus = "success" | "danger" | "neutral";
-
-export interface BodyweightLog {
-  id: number;
-  date: string; // DD/MM/YY
-  weight: number;
-  image_uri?: string | null;
-}
-
-export interface BodyweightSettings {
-  goal: BodyweightGoal;
-  weeklyTarget: number;
-  weightUnit: WeightUnit;
-}
 
 export interface WeeklyData {
   id: string;
@@ -28,8 +36,6 @@ export interface WeeklyData {
 }
 
 export const defaultBodyweightSettings: BodyweightSettings = {
-  goal: "maintain",
-  weeklyTarget: 0.2,
   weightUnit: "kg",
 };
 
@@ -64,12 +70,7 @@ function average(entries: BodyweightLog[]): number {
   return entries.reduce((sum, e) => sum + e.weight, 0) / entries.length;
 }
 
-function normalizeGoal(goal: string | null | undefined): BodyweightGoal {
-  if (goal === "lose" || goal === "gain" || goal === "maintain") return goal;
-  return defaultBodyweightSettings.goal;
-}
-
-function getDesiredWeeklyChange(settings: BodyweightSettings) {
+function getDesiredWeeklyChange(settings: BodyweightGoalSettings) {
   if (settings.goal === "lose") return -settings.weeklyTarget;
   if (settings.goal === "gain") return settings.weeklyTarget;
   return 0;
@@ -77,7 +78,7 @@ function getDesiredWeeklyChange(settings: BodyweightSettings) {
 
 export function getBodyweightTrendStatus(
   trend: number | null,
-  settings: BodyweightSettings,
+  settings: BodyweightGoalSettings,
 ): TrendStatus {
   if (trend === null) return "neutral";
 
@@ -92,6 +93,7 @@ export function useBodyweight() {
   const repo = BodyweightRepository;
   const [logs, setLogs] = useState<BodyweightLog[]>([]);
   const [settings, setSettings] = useState<BodyweightSettings>(defaultBodyweightSettings);
+  const [phases, setPhases] = useState<BodyweightPhase[]>([]);
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -106,10 +108,6 @@ export function useBodyweight() {
     try {
       const data = await repo.getSettings();
       setSettings({
-        goal: normalizeGoal(data?.goal),
-        weeklyTarget: data?.weekly_target && data.weekly_target > 0
-          ? data.weekly_target
-          : defaultBodyweightSettings.weeklyTarget,
         weightUnit: data?.weight_unit === "lbs" ? "lbs" : "kg",
       });
     } catch (error) {
@@ -117,10 +115,19 @@ export function useBodyweight() {
     }
   }, [repo]);
 
+  const fetchPhases = useCallback(async () => {
+    try {
+      setPhases(await repo.findAllPhases());
+    } catch (error) {
+      console.error("Error loading bodyweight phases:", error);
+    }
+  }, [repo]);
+
   useFocusEffect(useCallback(() => {
     fetchLogs();
     fetchSettings();
-  }, [fetchLogs, fetchSettings]));
+    fetchPhases();
+  }, [fetchLogs, fetchPhases, fetchSettings]));
 
   const weeklyData = useMemo<WeeklyData[]>(() => {
     const groups: Record<string, { monday: Date; entries: BodyweightLog[] }> = {};
@@ -156,10 +163,18 @@ export function useBodyweight() {
     return Number.isFinite(parsedTrend) ? parsedTrend : null;
   }, [weeklyData]);
 
-  const bodyweightGoal = useMemo(() => getDesiredWeeklyChange(settings), [settings]);
+  const activePhase = useMemo(() => getActiveBodyweightPhase(phases), [phases]);
+  const goalSettings = useMemo<BodyweightGoalSettings | null>(() => activePhase ? {
+    goal: activePhase.goal,
+    weeklyTarget: activePhase.weeklyTarget,
+  } : null, [activePhase]);
+  const bodyweightGoal = useMemo(
+    () => goalSettings ? getDesiredWeeklyChange(goalSettings) : null,
+    [goalSettings],
+  );
   const trendStatus = useMemo(
-    () => getBodyweightTrendStatus(bodyweightTrend, settings),
-    [bodyweightTrend, settings],
+    () => goalSettings ? getBodyweightTrendStatus(bodyweightTrend, goalSettings) : "neutral",
+    [bodyweightTrend, goalSettings],
   );
 
   const removeLog = async (id: number) => {
@@ -212,23 +227,11 @@ export function useBodyweight() {
     return await repo.existsByDate(date);
   };
 
-  const updateSettings = async (nextSettings: BodyweightSettings) => {
-    const weeklyTarget = Number.isFinite(nextSettings.weeklyTarget) && nextSettings.weeklyTarget > 0
-      ? nextSettings.weeklyTarget
-      : defaultBodyweightSettings.weeklyTarget;
-    const normalizedSettings = {
-      goal: normalizeGoal(nextSettings.goal),
-      weeklyTarget,
-      weightUnit: nextSettings.weightUnit === "lbs" ? "lbs" as const : "kg" as const,
-    };
-
+  const updateWeightUnit = async (weightUnit: WeightUnit) => {
+    const normalizedWeightUnit = weightUnit === "lbs" ? "lbs" as const : "kg" as const;
     try {
-      await repo.upsertSettings(
-        normalizedSettings.goal,
-        normalizedSettings.weeklyTarget,
-        normalizedSettings.weightUnit,
-      );
-      setSettings(normalizedSettings);
+      await repo.upsertWeightUnit(normalizedWeightUnit);
+      setSettings({ weightUnit: normalizedWeightUnit });
       return true;
     } catch (error) {
       console.error("Error saving bodyweight settings:", error);
@@ -236,9 +239,62 @@ export function useBodyweight() {
     }
   };
 
+  const addPhase = async (draft: BodyweightPhaseDraft) => {
+    const normalized = normalizeBodyweightPhaseDraft(draft);
+    if (!isValidBodyweightPhaseDraft(normalized)) return false;
+    try {
+      const now = new Date();
+      await repo.createPhase(normalized, formatLocalDate(now), now.toISOString());
+      await fetchPhases();
+      return true;
+    } catch (error) {
+      console.error("Error creating bodyweight phase:", error);
+      return false;
+    }
+  };
+
+  const updatePhase = async (id: number, draft: BodyweightPhaseDraft) => {
+    const normalized = normalizeBodyweightPhaseDraft(draft);
+    if (!isValidBodyweightPhaseDraft(normalized)) return false;
+    try {
+      await repo.updatePhase(id, normalized, new Date().toISOString());
+      await fetchPhases();
+      return true;
+    } catch (error) {
+      console.error("Error updating bodyweight phase:", error);
+      return false;
+    }
+  };
+
+  const endPhase = async (id: number) => {
+    try {
+      const now = new Date();
+      await repo.endPhase(id, formatLocalDate(now), now.toISOString());
+      await fetchPhases();
+      return true;
+    } catch (error) {
+      console.error("Error ending bodyweight phase:", error);
+      return false;
+    }
+  };
+
+  const removePhase = async (id: number) => {
+    try {
+      await repo.removePhase(id);
+      await fetchPhases();
+      return true;
+    } catch (error) {
+      console.error("Error deleting bodyweight phase:", error);
+      return false;
+    }
+  };
+
   return {
     weeklyData,
     settings,
+    goalSettings,
+    phases,
+    activePhase,
     bodyweightGoal,
     bodyweightTrend,
     trendStatus,
@@ -246,7 +302,11 @@ export function useBodyweight() {
     removeLog,
     updateLog,
     updateLogImage,
-    updateSettings,
+    updateWeightUnit,
     checkEntryToday,
+    addPhase,
+    updatePhase,
+    endPhase,
+    removePhase,
   };
 }

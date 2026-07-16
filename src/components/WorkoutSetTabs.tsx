@@ -76,7 +76,7 @@ export function WorkoutSetTabs({
               ]}
             >
               <ThemedText
-                type="smallBold"
+                type="label"
                 style={{ color: selected ? theme.text : theme.textSecondary }}
               >
                 Set {index + 1}
@@ -113,19 +113,19 @@ export function WorkoutSetTabs({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: Spacing.two },
+  container: { gap: Spacing.sm },
   tabList: { borderBottomWidth: 1, flexGrow: 1 },
   tab: {
     alignItems: "center",
     borderBottomWidth: 2,
-    borderRadius: Radius.small,
+    borderRadius: Radius.sm,
     flexGrow: 1,
     flexDirection: "row",
-    gap: Spacing.one,
+    gap: Spacing.xs,
     justifyContent: "center",
     minHeight: 44,
     minWidth: 84,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.md,
   },
   hidden: { display: "none" },
 });

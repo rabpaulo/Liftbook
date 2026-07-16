@@ -1,9 +1,11 @@
 import * as ImagePicker from "expo-image-picker";
+import { type Href, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   FlatList,
   Image,
   Modal,
+  StyleSheet,
   TouchableOpacity,
   View
 } from "react-native";
@@ -16,7 +18,7 @@ import { LiquidInput } from "@/components/LiquidInput";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Radius, Spacing, Typography } from "@/constants/theme";
 import {
   BodyweightGoal,
   BodyweightLog,
@@ -25,6 +27,7 @@ import {
   useBodyweight,
 } from "@/hooks/use-bodyweight";
 import { useTheme } from "@/hooks/use-theme";
+import { getBodyweightPhasePlannedEnd } from "@/utils/bodyweight-phases";
 import { showToast } from "@/utils/toast";
 import { formatWeight, fromKilograms, toKilograms } from "@/utils/weight-units";
 
@@ -42,6 +45,7 @@ function formatBodyweightDate(date: Date) {
 }
 
 export default function BodyweightScreen() {
+  const router = useRouter();
   const safeAreaInsets = useSafeAreaInsets();
   const theme = useTheme();
   const { showDialog } = useAppDialog();
@@ -56,6 +60,8 @@ export default function BodyweightScreen() {
   const {
     weeklyData,
     settings,
+    goalSettings,
+    activePhase,
     bodyweightGoal,
     bodyweightTrend,
     trendStatus,
@@ -212,8 +218,8 @@ export default function BodyweightScreen() {
         styles.container,
         {
           paddingTop: safeAreaInsets.top,
-          paddingBottom: safeAreaInsets.bottom - Spacing.five,
-          paddingHorizontal: Spacing.three,
+          paddingBottom: safeAreaInsets.bottom - Spacing.md,
+          paddingHorizontal: Spacing.md,
         },
       ]}
     >
@@ -232,51 +238,71 @@ export default function BodyweightScreen() {
 
         <LiquidCard style={styles.goalCard}>
           <View style={styles.goalHeader}>
-            <View>
-              <ThemedText type="smallBold" themeColor="accent">
+            <View style={styles.goalCopy}>
+              <ThemedText type="label" themeColor="accent">
                 Current bodyweight
               </ThemedText>
-              <ThemedText type="subtitle">
+              <ThemedText type="display" style={styles.tabularText}>
                 {latestLog ? formatWeight(latestLog.weight, settings.weightUnit) : `-- ${settings.weightUnit}`}
               </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {goalCopy[settings.goal]} at {fromKilograms(settings.weeklyTarget, settings.weightUnit).toFixed(1)} {settings.weightUnit}/week
+              <ThemedText type="caption" themeColor="textSecondary">
+                {activePhase && goalSettings
+                  ? `${activePhase.name} · ${goalCopy[goalSettings.goal]} at ${fromKilograms(goalSettings.weeklyTarget, settings.weightUnit).toFixed(1)} ${settings.weightUnit}/week`
+                  : "No active phase · create one to set a bodyweight goal"}
               </ThemedText>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: statusColors.backgroundColor }]}>
-              <ThemedText type="smallBold" style={{ color: statusColors.color }}>
-                {trendStatus === "success" ? "On pace" : trendStatus === "danger" ? "Off pace" : "No trend"}
+              <ThemedText type="label" style={{ color: statusColors.color }}>
+                {!activePhase ? "No goal" : trendStatus === "success" ? "On pace" : trendStatus === "danger" ? "Off pace" : "No trend"}
               </ThemedText>
             </View>
           </View>
 
           <View style={styles.metricsRow}>
             <View style={styles.metricBlock}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Bodyweight goal
-              </ThemedText>
-              <ThemedText type="smallBold" style={{ color: theme.text }}>
-                {formatSignedWeight(bodyweightGoal)}
-              </ThemedText>
-            </View>
-            <View style={styles.metricBlock}>
-              <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText type="caption" themeColor="textSecondary">
                 Bodyweight trending
               </ThemedText>
-              <ThemedText type="smallBold" style={{ color: statusColors.color }}>
+              <ThemedText type="numeric" style={{ color: statusColors.color }}>
                 {formatSignedWeight(bodyweightTrend)}
               </ThemedText>
             </View>
+            <View style={styles.metricBlock}>
+              <ThemedText type="caption" themeColor="textSecondary">
+                Bodyweight goal
+              </ThemedText>
+              <ThemedText type="numeric">
+                {formatSignedWeight(bodyweightGoal)}
+              </ThemedText>
+            </View>
           </View>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => router.push("/bodyweight/phases" as Href)}
+            style={[styles.phaseRow, { borderTopColor: theme.divider }]}
+          >
+            <View style={styles.flexText}>
+              <ThemedText type="label">
+                {activePhase ? "Active phase" : "Bodyweight phases"}
+              </ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">
+                {activePhase
+                  ? `${activePhase.durationWeeks} ${activePhase.durationWeeks === 1 ? "week" : "weeks"} · ends ${getBodyweightPhasePlannedEnd(activePhase).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`
+                  : "Add a named goal with a duration and weekly trend."}
+              </ThemedText>
+            </View>
+            <ThemedText type="label" themeColor="accent">Manage</ThemedText>
+          </TouchableOpacity>
         </LiquidCard>
 
         <LiquidCard style={styles.logCard}>
           <View style={styles.logHeading}>
-            <View style={{ flex: 1 }}>
-              <ThemedText type="smallBold">
+            <View style={styles.flexText}>
+              <ThemedText type="section">
                 {editingId !== null ? "Edit bodyweight" : "Log bodyweight"}
               </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
+              <ThemedText type="caption" themeColor="textSecondary">
                 {editingId !== null ? "Update the selected entry" : `Today · ${todayLabel}`}
               </ThemedText>
             </View>
@@ -295,7 +321,7 @@ export default function BodyweightScreen() {
               onSubmitEditing={() => void handleSave()}
             />
             <View style={[styles.unitBadge, { backgroundColor: theme.backgroundSelected }]}>
-              <ThemedText type="smallBold">{settings.weightUnit}</ThemedText>
+              <ThemedText type="label">{settings.weightUnit}</ThemedText>
             </View>
           </View>
 
@@ -322,7 +348,7 @@ export default function BodyweightScreen() {
                 onPress={selectPhotoForNewLog}
               >
                 <ThemedText
-                  type="smallBold"
+                  type="label"
                   style={{ color: selectedImageUri ? theme.accent : theme.textSecondary }}
                 >
                   {selectedImageUri ? "Photo selected" : "Add photo"}
@@ -349,61 +375,54 @@ export default function BodyweightScreen() {
             onPress={() => setPreviewImageUri(selectedImageUri)}
           >
             <Image source={{ uri: selectedImageUri }} style={styles.selectedPhotoThumb} />
-            <View style={{ flex: 1 }}>
-              <ThemedText type="smallBold">Photo ready</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">It will be saved with today&apos;s log.</ThemedText>
+            <View style={styles.flexText}>
+              <ThemedText type="bodyMedium">Photo ready</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">It will be saved with today&apos;s log.</ThemedText>
             </View>
             <TouchableOpacity onPress={() => setSelectedImageUri(null)}>
-              <ThemedText type="smallBold" themeColor="danger">Remove</ThemedText>
+              <ThemedText type="label" themeColor="danger">Remove</ThemedText>
             </TouchableOpacity>
           </TouchableOpacity>
         )}
+        <View style={styles.historyHeading}>
+          <ThemedText type="section">Weekly history</ThemedText>
+        </View>
             </>
           )}
           renderItem={({ item }) => {
             const isExpanded = expandedWeeks.includes(item.id);
             const weekTrend = item.diff === null ? null : Number(item.diff);
-            const weekStatus = getBodyweightTrendStatus(
-              Number.isFinite(weekTrend) ? weekTrend : null,
-              settings,
-            );
+            const weekStatus = goalSettings
+              ? getBodyweightTrendStatus(
+                Number.isFinite(weekTrend) ? weekTrend : null,
+                goalSettings,
+              )
+              : "neutral";
             const weekStatusColors = getStatusColors(weekStatus);
 
             return (
-              <View style={{ width: "100%" }}>
-                {/* Header do Dropdown: Data do começo da semana - Média */}
+              <View style={styles.weekGroup}>
                 <TouchableOpacity
-                  style={{
-                    paddingVertical: Spacing.four,
-                    paddingHorizontal: Spacing.four,
-                    borderColor: theme.glassTokens.border,
-                    borderWidth: 1,
-                    borderRadius: Radius.large,
-                    backgroundColor: theme.glassTokens.background,
-                    alignItems: "center",
-                    shadowColor: theme.glassTokens.shadow,
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 1,
-                    shadowRadius: 18,
-                    elevation: 2,
-                  }}
+                  style={[
+                    styles.weekCard,
+                    {
+                      borderColor: theme.glassTokens.border,
+                      backgroundColor: theme.glassTokens.background,
+                    },
+                  ]}
                   onPress={() => toggleWeek(item.id)}
                   activeOpacity={0.7}
                 >
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-
-                    {/* Left side: Date and Entries count */}
-                    <View style={{ flex: 1, alignItems: 'flex-start', gap: 2 }}>
-                      <ThemedText type="smallBold">{item.id}</ThemedText>
-                      <ThemedText style={{ fontSize: 12, color: theme.textSecondary }}>
+                  <View style={styles.weekSummaryRow}>
+                    <View style={styles.weekCopyLeft}>
+                      <ThemedText type="bodyMedium">{item.id}</ThemedText>
+                      <ThemedText type="caption" themeColor="textSecondary">
                         {item.count} {item.count === 1 ? 'Entry' : 'Entries'}
                       </ThemedText>
                     </View>
-
-                    {/* Right side: Average and Up/Down indicator */}
-                    <View style={{ flex: 1, alignItems: 'flex-end', gap: 2 }}>
-                      <ThemedText type="smallBold">{formatWeight(Number(item.avg), settings.weightUnit, 2)}</ThemedText>
-                      <ThemedText style={{ fontSize: 12, color: weekStatusColors.color }}>
+                    <View style={styles.weekCopyRight}>
+                      <ThemedText type="numeric">{formatWeight(Number(item.avg), settings.weightUnit, 2)}</ThemedText>
+                      <ThemedText type="caption" style={{ color: weekStatusColors.color }}>
                         {weekTrend === null
                           ? "No trend"
                           : weekTrend > 0
@@ -413,27 +432,18 @@ export default function BodyweightScreen() {
                               : `+0 ${settings.weightUnit}`}
                       </ThemedText>
                     </View>
-
                   </View>
                 </TouchableOpacity>
 
-                {/* Itens do Dropdown: Data do log - Peso do dia */}
                 {isExpanded && (
-                  <View style={{ marginTop: Spacing.two, gap: Spacing.one }}>
+                  <View style={styles.weekEntries}>
                     {item.entries.map((log) => (
                       <TouchableOpacity
                         key={log.id}
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: Spacing.two,
-                          paddingVertical: Spacing.two,
-                          paddingHorizontal: Spacing.four,
-                          backgroundColor: theme.backgroundElement,
-                          borderWidth: 1,
-                          borderColor: theme.divider,
-                          borderRadius: Radius.medium,
-                        }}
+                        style={[
+                          styles.logRow,
+                          { backgroundColor: theme.backgroundElement, borderColor: theme.divider },
+                        ]}
                         onLongPress={() => void handleLongPressLog(log)}
                         delayLongPress={500}
                       >
@@ -444,15 +454,15 @@ export default function BodyweightScreen() {
                         ) : (
                           <View style={[styles.emptyPhotoThumb, { borderColor: theme.divider }]} />
                         )}
-                        <View style={{ flex: 1 }}>
-                          <ThemedText style={{ fontSize: 14 }}>
+                        <View style={styles.logCopy}>
+                          <ThemedText type="bodyMedium">
                             {log.date}
                           </ThemedText>
-                          <ThemedText type="small" themeColor="textSecondary">
+                          <ThemedText type="caption" themeColor="textSecondary">
                             {log.image_uri ? "Photo attached" : "Long press to add photo"}
                           </ThemedText>
                         </View>
-                        <ThemedText style={{ fontSize: 14 }}>
+                        <ThemedText type="numeric">
                           {formatWeight(log.weight, settings.weightUnit)}
                         </ThemedText>
                       </TouchableOpacity>
@@ -483,131 +493,174 @@ export default function BodyweightScreen() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-  } as const,
+  },
   content: {
     flex: 1,
     width: "100%",
     maxWidth: MaxContentWidth,
-  } as const,
+  },
   headerBlock: {
-    marginTop: Spacing.five,
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.one,
-  } as const,
+    marginTop: Spacing.xl,
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+  },
   logCard: {
-    gap: Spacing.three,
+    gap: Spacing.md,
     width: "100%",
-    marginTop: Spacing.three,
-  } as const,
+    marginTop: Spacing.md,
+  },
   logHeading: {
     alignItems: "center",
     flexDirection: "row",
-  } as const,
+  },
   weightInputRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: Spacing.two,
-  } as const,
+    gap: Spacing.sm,
+  },
   weightInput: {
+    ...Typography.numeric,
     flex: 1,
-    fontSize: 24,
     minHeight: 58,
-  } as const,
+  },
   unitBadge: {
     alignItems: "center",
-    borderRadius: Radius.medium,
+    borderRadius: Radius.md,
     height: 58,
     justifyContent: "center",
     minWidth: 64,
-    paddingHorizontal: Spacing.three,
-  } as const,
+    paddingHorizontal: Spacing.md,
+  },
   logActions: {
     flexDirection: "row",
-    gap: Spacing.two,
-  } as const,
+    gap: Spacing.sm,
+  },
   logAction: {
     flex: 1,
-  } as const,
+  },
   goalCard: {
     width: "100%",
-    marginTop: Spacing.three,
-  } as const,
+    marginTop: Spacing.md,
+  },
   goalHeader: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: Spacing.two,
-  } as const,
+    gap: Spacing.sm,
+  },
+  goalCopy: { flexGrow: 1, flexShrink: 1, minWidth: 200 },
+  tabularText: { fontVariant: ["tabular-nums"] },
   statusBadge: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderRadius: Radius.pill,
-  } as const,
+  },
   metricsRow: {
     flexDirection: "row",
-    gap: Spacing.two,
-    marginTop: Spacing.three,
-  } as const,
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+  },
   metricBlock: {
     flex: 1,
-    gap: Spacing.one,
-  } as const,
+    gap: Spacing.xs,
+    minWidth: 140,
+  },
+  phaseRow: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+  },
   list: {
     flex: 1,
     width: "100%",
-  } as const,
+  },
   listContent: {
-    gap: Spacing.three,
-    paddingBottom: Spacing.five,
-  } as const,
+    gap: Spacing.md,
+    paddingBottom: Spacing.xl,
+  },
   photoButton: {
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
     minHeight: 48,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Radius.medium,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
     borderWidth: 1,
-  } as const,
+  },
   selectedPhotoRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-    padding: Spacing.two,
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    padding: Spacing.sm,
     borderWidth: 1,
-    borderRadius: Radius.large,
-  } as const,
+    borderRadius: Radius.lg,
+  },
   selectedPhotoThumb: {
     width: 52,
     height: 52,
-    borderRadius: Radius.medium,
-  } as const,
+    borderRadius: Radius.md,
+  },
+  historyHeading: { marginTop: Spacing.lg },
+  weekGroup: { width: "100%" },
+  weekCard: {
+    alignItems: "center",
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+  },
+  weekSummaryRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  weekCopyLeft: { alignItems: "flex-start", flex: 1, gap: Spacing.xs },
+  weekCopyRight: { alignItems: "flex-end", flex: 1, gap: Spacing.xs },
+  weekEntries: { gap: Spacing.xs, marginTop: Spacing.sm },
+  logRow: {
+    alignItems: "center",
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: Spacing.sm,
+    minHeight: 58,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  logCopy: { flex: 1 },
+  flexText: { flex: 1 },
   logPhotoThumb: {
     width: 42,
     height: 42,
-    borderRadius: Radius.medium,
-  } as const,
+    borderRadius: Radius.md,
+  },
   emptyPhotoThumb: {
     width: 42,
     height: 42,
-    borderRadius: Radius.medium,
+    borderRadius: Radius.md,
     borderWidth: 1,
-  } as const,
+  },
   photoPreview: {
     flex: 1,
     backgroundColor: "#000000",
     alignItems: "center",
     justifyContent: "center",
-  } as const,
+  },
   previewImage: {
     width: "94%",
     height: "86%",
-  } as const,
-};
+  },
+});

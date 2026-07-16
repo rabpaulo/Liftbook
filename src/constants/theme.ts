@@ -1,3 +1,5 @@
+import type { TextStyle } from "react-native";
+
 const lightPalette = {
   background: "#ECEEF1",
   surface: "#FFFFFF",
@@ -95,34 +97,76 @@ type StringThemeKeys<T> = {
 
 export type ThemeColor = StringThemeKeys<typeof Colors.light> & StringThemeKeys<typeof Colors.dark>;
 
-export const Fonts = { sans: "Inter" } as const;
-
-export const Spacing = {
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
+export const Fonts = {
+  regular: "InterRegular",
+  medium: "InterMedium",
+  semibold: "InterSemiBold",
+  bold: "InterBold",
+  extraBold: "InterExtraBold",
+  displayBold: "InterDisplayBold",
+  displayExtraBold: "InterDisplayExtraBold",
 } as const;
 
-export const spacing = {
+export const Typography = {
+  display: {
+    fontFamily: Fonts.displayExtraBold,
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.8,
+  },
+  title: {
+    fontFamily: Fonts.displayBold,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.4,
+  },
+  section: {
+    fontFamily: Fonts.semibold,
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+  },
+  body: {
+    fontFamily: Fonts.regular,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  bodyMedium: {
+    fontFamily: Fonts.medium,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  label: {
+    fontFamily: Fonts.semibold,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  caption: {
+    fontFamily: Fonts.medium,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  numeric: {
+    fontFamily: Fonts.semibold,
+    fontSize: 18,
+    lineHeight: 24,
+    fontVariant: ["tabular-nums"],
+  },
+} satisfies Record<string, TextStyle>;
+
+export const Spacing = {
   xs: 4,
   sm: 8,
   md: 16,
   lg: 24,
+  xl: 32,
 } as const;
 
 export const Radius = {
-  small: 10,
-  medium: 16,
-  large: 22,
-  xlarge: 28,
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 22,
   pill: 999,
-} as const;
-
-export const radius = {
-  md: 16,
-  lg: 22,
-  xl: 28,
 } as const;
 export const MaxContentWidth = 860;

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { StyleSheet, View, ViewProps } from "react-native";
 
-import { radius, spacing } from "@/constants/theme";
+import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 type LiquidCardProps = ViewProps & {
@@ -34,11 +34,11 @@ export function LiquidCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xl,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     overflow: "hidden",
   },
   padded: {
-    padding: spacing.md,
+    padding: Spacing.md,
   },
 });

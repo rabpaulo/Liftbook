@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  ensureBodyweightSchema,
   migrateWorkoutSetCommentsIfNeeded,
   repairWorkoutSetForeignKeys,
   repairWorkoutSessionExerciseForeignKeys,
@@ -14,6 +15,48 @@ vi.mock("expo-sqlite", () => ({
 vi.mock("@/utils/video-service", () => ({
   videoService: { removeMany: vi.fn() },
 }));
+
+describe("bodyweight schema", () => {
+  it("adds phase persistence and upgrades legacy settings idempotently", async () => {
+    const sqlite = new DatabaseSync(":memory:");
+    sqlite.exec(`
+      CREATE TABLE bodyweight_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        goal TEXT NOT NULL DEFAULT 'maintain',
+        weekly_target REAL NOT NULL DEFAULT 0.5
+      );
+      INSERT INTO bodyweight_settings (id, goal, weekly_target) VALUES (1, 'lose', 0.5);
+    `);
+    const database = {
+      execAsync: async (source: string) => { sqlite.exec(source); },
+      getAllAsync: async <Row>(source: string) => sqlite.prepare(source).all() as Row[],
+    };
+
+    await ensureBodyweightSchema(database);
+    await ensureBodyweightSchema(database);
+
+    expect(sqlite.prepare(
+      "SELECT goal, weekly_target, weight_unit FROM bodyweight_settings WHERE id = 1",
+    ).get()).toEqual({ goal: "lose", weekly_target: 0.5, weight_unit: "kg" });
+    expect(sqlite.prepare("PRAGMA table_info(bodyweight_phases)").all().map((column) => (
+      column as { name: string }
+    ).name)).toEqual([
+      "id",
+      "name",
+      "goal",
+      "weekly_target",
+      "duration_weeks",
+      "started_on",
+      "ended_on",
+      "created_at",
+      "updated_at",
+    ]);
+    expect(sqlite.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'idx_bodyweight_phases_single_open'",
+    ).get()).toEqual({ name: "idx_bodyweight_phases_single_open" });
+    sqlite.close();
+  });
+});
 
 describe("workout set comment migration", () => {
   it("adds the nullable column once without changing existing sets", async () => {

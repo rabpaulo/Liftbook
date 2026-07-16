@@ -144,12 +144,12 @@ export default function WorkoutDetailScreen() {
     <TrainingScreen>
       <ScreenHeader title={workout.name} subtitle="Workout" showBack right={<Pressable accessibilityLabel="Delete workout" onPress={() => void remove()}><Ionicons name="trash-outline" size={23} color={theme.danger} /></Pressable>} />
       <LiquidCard style={styles.card}>
-        <ThemedText type="small" themeColor="textSecondary">{formatWorkoutDate(workout.startedAt)}</ThemedText>
-        <ThemedText type="small">{summary.exerciseCount} exercises</ThemedText>
+        <ThemedText type="caption" themeColor="textSecondary">{formatWorkoutDate(workout.startedAt)}</ThemedText>
+        <ThemedText type="caption">{summary.exerciseCount} exercises</ThemedText>
         {workout.notes ? <ThemedText>{workout.notes}</ThemedText> : null}
       </LiquidCard>
       <LiquidCard style={styles.card}>
-        <ThemedText type="subtitle">Totals</ThemedText>
+        <ThemedText type="section">Totals</ThemedText>
         <View style={styles.metrics}>
           <Metric label="Resistance sets" value={String(summary.completedResistanceSets)} />
         </View>
@@ -161,10 +161,10 @@ export default function WorkoutDetailScreen() {
           exercise.priorPersonalRecords,
         );
         return <LiquidCard key={exercise.id} style={styles.card}>
-          <ThemedText type="subtitle">{exercise.exerciseName}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">{exercise.exerciseCategory}</ThemedText>
-          {exercise.exerciseNotes ? <ThemedText type="small">{exercise.exerciseNotes}</ThemedText> : null}
-          {best?.highestWeight !== null && best ? <ThemedText type="small" themeColor="textSecondary">Best: {formatWeight(best.highestWeight, weightUnit)}{best.estimatedOneRepMax ? ` · estimated 1RM ${formatWeight(best.estimatedOneRepMax, weightUnit)}` : ""}</ThemedText> : null}
+          <ThemedText type="section">{exercise.exerciseName}</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">{exercise.exerciseCategory}</ThemedText>
+          {exercise.exerciseNotes ? <ThemedText type="caption">{exercise.exerciseNotes}</ThemedText> : null}
+          {best?.highestWeight !== null && best ? <ThemedText type="caption" themeColor="textSecondary">Best: {formatWeight(best.highestWeight, weightUnit)}{best.estimatedOneRepMax ? ` · estimated 1RM ${formatWeight(best.estimatedOneRepMax, weightUnit)}` : ""}</ThemedText> : null}
           <WorkoutSetTabs sets={exercise.sets} renderSet={(set, setIndex, tabbed) => (
             <WorkoutSetRow key={`${set.id}-${weightUnit}`} personalRecord={personalRecords[setIndex]} set={set} unit={weightUnit} readOnly showPosition={!tabbed} />
           )} />
@@ -177,10 +177,10 @@ export default function WorkoutDetailScreen() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) { return <View style={styles.metric}><ThemedText type="small" themeColor="textSecondary">{label}</ThemedText><ThemedText type="smallBold">{value}</ThemedText></View>; }
+function Metric({ label, value }: { label: string; value: string }) { return <View style={styles.metric}><ThemedText type="caption" themeColor="textSecondary">{label}</ThemedText><ThemedText type="numeric">{value}</ThemedText></View>; }
 
 const styles = StyleSheet.create({
-  card: { gap: Spacing.two },
-  metrics: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.three },
-  metric: { gap: Spacing.one, minWidth: 120 },
+  card: { gap: Spacing.sm },
+  metrics: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md },
+  metric: { gap: Spacing.xs, minWidth: 120 },
 });

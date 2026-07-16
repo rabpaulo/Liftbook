@@ -101,12 +101,12 @@ export default function TrainingHomeScreen() {
           <LiquidCard style={styles.historyCard}>
             <View style={styles.rowBetween}>
               <View style={{ flex: 1 }}>
-                <ThemedText type="smallBold">{todayWorkout.name}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">Today</ThemedText>
+                <ThemedText type="bodyMedium">{todayWorkout.name}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">Today</ThemedText>
               </View>
               <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
             </View>
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText type="caption" themeColor="textSecondary">
               {todayWorkout.exerciseCount} exercises · {todayWorkout.completedSetCount} logged sets
             </ThemedText>
           </LiquidCard>
@@ -121,16 +121,16 @@ function ActionCard({ icon, title, detail, onPress }: { icon: React.ComponentPro
   return (
     <Pressable onPress={onPress} style={[styles.actionCard, { borderColor: theme.divider, backgroundColor: theme.backgroundElement }]}>
       <Ionicons name={icon} size={28} color={theme.accent} />
-      <ThemedText type="smallBold">{title}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">{detail}</ThemedText>
+      <ThemedText type="section">{title}</ThemedText>
+      <ThemedText type="body" themeColor="textSecondary">{detail}</ThemedText>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  rowBetween: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", gap: Spacing.two },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.two },
-  actionCard: { borderRadius: Radius.large, borderWidth: 1, flex: 1, gap: Spacing.one, minHeight: 130, minWidth: 150, padding: Spacing.three },
-  manageRow: { flexDirection: "row", gap: Spacing.two },
-  historyCard: { gap: Spacing.two },
+  rowBetween: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", gap: Spacing.sm },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+  actionCard: { borderRadius: Radius.lg, borderWidth: 1, flex: 1, gap: Spacing.xs, minHeight: 130, minWidth: 150, padding: Spacing.md },
+  manageRow: { flexDirection: "row", gap: Spacing.sm },
+  historyCard: { gap: Spacing.sm },
 });

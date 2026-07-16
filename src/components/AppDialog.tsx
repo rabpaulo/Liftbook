@@ -96,8 +96,8 @@ export function AppDialogProvider({ children }: { children: ReactNode }) {
               {
                 backgroundColor: theme.backgroundElement,
                 borderColor: theme.divider,
-                marginTop: insets.top + Spacing.three,
-                marginBottom: insets.bottom + Spacing.three,
+                marginTop: insets.top + Spacing.md,
+                marginBottom: insets.bottom + Spacing.md,
               },
             ]}
           >
@@ -111,9 +111,9 @@ export function AppDialogProvider({ children }: { children: ReactNode }) {
                   <Ionicons name={dialog.icon ?? "options-outline"} size={24} color={theme.text} />
                 </View>
                 <View style={styles.copy}>
-                  <ThemedText type="subtitle" style={styles.centerText}>{dialog.title}</ThemedText>
+                  <ThemedText type="section" style={styles.centerText}>{dialog.title}</ThemedText>
                   {dialog.message ? (
-                    <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+                    <ThemedText type="body" themeColor="textSecondary" style={styles.centerText}>
                       {dialog.message}
                     </ThemedText>
                   ) : null}
@@ -150,26 +150,26 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.58)",
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.md,
   },
   dialog: {
-    borderRadius: Radius.xlarge,
+    borderRadius: Radius.xl,
     borderWidth: 1,
     maxHeight: "90%",
     maxWidth: Math.min(MaxContentWidth, 440),
     overflow: "hidden",
     width: "100%",
   },
-  content: { gap: Spacing.three, padding: Spacing.four },
+  content: { gap: Spacing.md, padding: Spacing.lg },
   icon: {
     alignItems: "center",
     alignSelf: "center",
-    borderRadius: Radius.medium,
+    borderRadius: Radius.md,
     height: 48,
     justifyContent: "center",
     width: 48,
   },
-  copy: { gap: Spacing.two },
+  copy: { gap: Spacing.sm },
   centerText: { textAlign: "center" },
-  actions: { gap: Spacing.two },
+  actions: { gap: Spacing.sm },
 });

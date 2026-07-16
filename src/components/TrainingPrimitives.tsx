@@ -48,12 +48,12 @@ export function TrainingScreen({ children, scroll = true }: { children: ReactNod
             onLayout={(event) => { viewportHeight.current = event.nativeEvent.layout.height; }}
             onScroll={(event) => { scrollOffset.current = event.nativeEvent.contentOffset.y; }}
             scrollEventThrottle={16}
-            contentContainerStyle={[styles.scroll, { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom + 100 }]}
+            contentContainerStyle={[styles.scroll, { paddingTop: insets.top + Spacing.md, paddingBottom: insets.bottom + 100 }]}
           >
             {content}
           </ScrollView>
         ) : (
-          <View style={[styles.scroll, styles.screen, { paddingTop: insets.top + Spacing.three, paddingBottom: insets.bottom }]}>{content}</View>
+          <View style={[styles.scroll, styles.screen, { paddingTop: insets.top + Spacing.md, paddingBottom: insets.bottom }]}>{content}</View>
         )}
       </KeyboardAvoidingView>
     </ThemedView>
@@ -63,7 +63,7 @@ export function TrainingScreen({ children, scroll = true }: { children: ReactNod
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <View style={styles.sectionHeader}>
-      <ThemedText type="subtitle">{title}</ThemedText>
+      <ThemedText type="section">{title}</ThemedText>
       {action}
     </View>
   );
@@ -74,8 +74,8 @@ export function EmptyState({ title, message, action }: { title: string; message:
   return (
     <View style={[styles.empty, { borderColor: theme.divider, backgroundColor: theme.backgroundElement }]}>
       <Ionicons name="barbell-outline" size={28} color={theme.textSecondary} />
-      <ThemedText type="smallBold">{title}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>{message}</ThemedText>
+      <ThemedText type="bodyMedium">{title}</ThemedText>
+      <ThemedText type="body" themeColor="textSecondary" style={styles.centerText}>{message}</ThemedText>
       {action}
     </View>
   );
@@ -106,7 +106,7 @@ export function SegmentedControl<T extends string | number | null>({
             style={[styles.segment, selected && { backgroundColor: theme.accentSoft }]}
           >
             <ThemedText
-              type="smallBold"
+              type="label"
               style={[styles.segmentLabel, { color: selected ? theme.accent : theme.textSecondary }]}
             >
               {option.label}
@@ -120,12 +120,12 @@ export function SegmentedControl<T extends string | number | null>({
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  scroll: { alignItems: "center", paddingHorizontal: Spacing.three },
-  content: { width: "100%", maxWidth: MaxContentWidth, gap: Spacing.three },
-  sectionHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: Spacing.two },
-  empty: { alignItems: "center", borderRadius: Radius.large, borderWidth: 1, gap: Spacing.two, padding: Spacing.four },
+  scroll: { alignItems: "center", paddingHorizontal: Spacing.md },
+  content: { width: "100%", maxWidth: MaxContentWidth, gap: Spacing.md },
+  sectionHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginTop: Spacing.sm },
+  empty: { alignItems: "center", borderRadius: Radius.lg, borderWidth: 1, gap: Spacing.sm, padding: Spacing.lg },
   centerText: { textAlign: "center", maxWidth: 360 },
-  segmented: { borderRadius: Radius.medium, borderWidth: 1, flexDirection: "row", overflow: "hidden" },
-  segment: { alignItems: "center", flex: 1, justifyContent: "center", minHeight: 38, minWidth: 40, paddingHorizontal: Spacing.two },
-  segmentLabel: { textAlign: "center", width: "100%" },
+  segmented: { borderRadius: Radius.md, borderWidth: 1, flexDirection: "row", overflow: "hidden" },
+  segment: { alignItems: "center", flex: 1, justifyContent: "center", minHeight: 38, minWidth: 40, paddingHorizontal: Spacing.sm },
+  segmentLabel: { fontVariant: ["tabular-nums"], textAlign: "center", width: "100%" },
 });

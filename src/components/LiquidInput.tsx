@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, TextInput, TextInputProps } from "react-native";
 
-import { radius, spacing } from "@/constants/theme";
+import { Radius, Spacing, Typography } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 
 export function LiquidInput({ style, onBlur, onFocus, placeholderTextColor, ...props }: TextInputProps) {
@@ -35,12 +35,12 @@ export function LiquidInput({ style, onBlur, onFocus, placeholderTextColor, ...p
 
 const styles = StyleSheet.create({
   input: {
-    borderRadius: radius.lg,
+    ...Typography.body,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    fontSize: 15,
     minHeight: 50,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     width: "100%",
   },
 });

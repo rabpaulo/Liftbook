@@ -8,7 +8,6 @@ export interface Exercise {
   notes: string | null;
   category: string;
   type: ExerciseType;
-  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
 }

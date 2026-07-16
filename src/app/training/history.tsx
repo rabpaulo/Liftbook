@@ -40,7 +40,7 @@ export default function HistoryScreen() {
       <LiquidInput value={search} onChangeText={setSearch} placeholder="Search workouts or exercises" />
       {loading ? <ThemedText themeColor="textSecondary">Loading history…</ThemedText> : groups.length === 0 ? <EmptyState title="No workouts found" message="Log a set or try another search." /> : groups.map(([month, workouts]) => (
         <View key={month} style={styles.group}>
-          <ThemedText type="subtitle">{month}</ThemedText>
+          <ThemedText type="section">{month}</ThemedText>
           {workouts.map((workout) => (
             <Pressable
               accessibilityLabel={`${workout.name}, ${formatWorkoutDate(workout.startedAt)}, ${workout.exerciseCount} exercises, ${workout.completedSetCount} logged sets`}
@@ -50,7 +50,7 @@ export default function HistoryScreen() {
             >
               <LiquidCard style={styles.card}>
                 <View style={styles.row}>
-                  <ThemedText type="smallBold" style={styles.name}>{workout.name}</ThemedText>
+                  <ThemedText type="bodyMedium" style={styles.name}>{workout.name}</ThemedText>
                   <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
                 </View>
                 <View style={styles.details}>
@@ -75,16 +75,16 @@ function HistoryDetail({ icon, label }: {
   return (
     <View style={styles.detail}>
       <Ionicons name={icon} size={17} color={theme.textSecondary} />
-      <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
+      <ThemedText type="caption" themeColor="textSecondary">{label}</ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  group: { gap: Spacing.two, marginTop: Spacing.two },
-  card: { gap: Spacing.two },
-  row: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
+  group: { gap: Spacing.sm, marginTop: Spacing.sm },
+  card: { gap: Spacing.sm },
+  row: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
   name: { flex: 1, minWidth: 0 },
-  details: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.two },
-  detail: { alignItems: "center", flexDirection: "row", gap: Spacing.one },
+  details: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+  detail: { alignItems: "center", flexDirection: "row", gap: Spacing.xs },
 });

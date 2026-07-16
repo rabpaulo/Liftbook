@@ -133,7 +133,7 @@ User prompts and confirmations use the app-themed [src/components/AppDialog.tsx]
 ### Routes
 
 - [src/app/(tabs)/index.tsx](src/app/(tabs)/index.tsx) — Training home, start actions, and today’s workout when it has logged sets; otherwise it displays “No training logged today”.
-- [src/app/training/exercises.tsx](src/app/training/exercises.tsx) — exercise library, category dropdown with a `+` action for custom categories, editing, and archiving.
+- [src/app/training/exercises.tsx](src/app/training/exercises.tsx) — exercise library, category dropdown with a `+` action for custom categories, and editing.
 - [src/app/training/templates.tsx](src/app/training/templates.tsx) — template list and workout starts.
 - [src/app/training/template/[id].tsx](src/app/training/template/[id].tsx) — template editor.
 - [src/app/training/today/[id].tsx](src/app/training/today/[id].tsx) — today’s workout editor focused on one exercise at a time. A rightward swipe from the left edge, the list icon, or the exercise selector opens the exercise drawer; selecting an exercise shows its sets and hold-and-drag reorders the drawer list.

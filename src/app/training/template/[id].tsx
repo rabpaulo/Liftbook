@@ -110,7 +110,7 @@ export default function TemplateEditorScreen() {
       <LiquidInput value={name} onChangeText={setName} onBlur={() => void saveInfo()} placeholder="Template name" />
       <LiquidInput value={notes} onChangeText={setNotes} onBlur={() => void saveInfo()} placeholder="Template notes" multiline />
       <LiquidButton variant="primary" onPress={() => void startTemplateWorkout(template.id)}>Start this workout</LiquidButton>
-      <View style={styles.row}><ThemedText type="subtitle" style={{ flex: 1 }}>Exercises</ThemedText><Pressable onPress={() => setPicker(true)} accessibilityLabel="Add exercise"><Ionicons name="add-circle-outline" size={28} color={theme.accent} /></Pressable></View>
+      <View style={styles.row}><ThemedText type="section" style={{ flex: 1 }}>Exercises</ThemedText><Pressable onPress={() => setPicker(true)} accessibilityLabel="Add exercise"><Ionicons name="add-circle-outline" size={28} color={theme.accent} /></Pressable></View>
       {template.exercises.length === 0 ? <EmptyState title="Empty template" message="Add exercises to build this workout." /> : template.exercises.map((item, index) => <TemplateExerciseCard key={item.id} item={item} index={index} total={template.exercises.length} onChanged={load} onReorder={(targetIndex) => reorderExercise(item.id, targetIndex)} />)}
       <LiquidButton onPress={() => setPicker(true)}>Add exercise</LiquidButton>
       <ExercisePicker visible={picker} onClose={() => setPicker(false)} onSelect={async (exercise) => { await workoutTemplateRepository.addExercise(template.id, exercise.id); await load(); }} />
@@ -141,7 +141,7 @@ function TemplateExerciseCard({ item, index, total, onChanged, onReorder }: {
   const finishDrag = useCallback((distance: number) => {
     setDragging(false);
     Animated.spring(dragY, { toValue: 0, useNativeDriver: true }).start();
-    const offset = Math.round(distance / (height + Spacing.three));
+    const offset = Math.round(distance / (height + Spacing.md));
     const targetIndex = Math.max(0, Math.min(index + offset, total - 1));
     if (targetIndex !== index) void onReorder(targetIndex);
   }, [dragY, height, index, onReorder, total]);
@@ -212,7 +212,7 @@ function TemplateExerciseCard({ item, index, total, onChanged, onReorder }: {
               <Ionicons name="reorder-three" size={26} color={dragging ? theme.accent : theme.textSecondary} />
             </View>
           </GestureDetector>
-          <View style={{ flex: 1 }}><ThemedText type="smallBold">{item.exercise.name}</ThemedText><ThemedText type="small" themeColor="textSecondary">{item.exercise.category}</ThemedText></View>
+          <View style={{ flex: 1 }}><ThemedText type="bodyMedium">{item.exercise.name}</ThemedText><ThemedText type="caption" themeColor="textSecondary">{item.exercise.category}</ThemedText></View>
           <LiquidInput style={styles.setInput} value={sets} onChangeText={setSets} onBlur={() => void save()} keyboardType="number-pad" placeholder="Sets" />
           <Pressable accessibilityLabel="Remove exercise" onPress={() => void workoutTemplateRepository.removeExercise(item.id).then(onChanged)}><Ionicons name="trash-outline" size={22} color={theme.danger} /></Pressable>
         </View>
@@ -222,10 +222,10 @@ function TemplateExerciseCard({ item, index, total, onChanged, onReorder }: {
 }
 
 const styles = StyleSheet.create({
-  row: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
+  row: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
   draggableCard: { zIndex: 0 },
   draggingCard: { elevation: 8, opacity: 0.96, zIndex: 10 },
   dragHandle: { alignItems: "center", height: 44, justifyContent: "center", width: 32 },
-  exerciseCard: { gap: Spacing.three },
+  exerciseCard: { gap: Spacing.md },
   setInput: { minHeight: 44, width: 76 },
 });

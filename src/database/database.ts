@@ -47,6 +47,23 @@ const BODYWEIGHT_SCHEMA_SQL = `
     weekly_target REAL NOT NULL DEFAULT 0.5,
     weight_unit TEXT NOT NULL DEFAULT 'kg' CHECK(weight_unit IN ('kg', 'lbs'))
   );
+
+  CREATE TABLE IF NOT EXISTS bodyweight_phases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 80),
+    goal TEXT NOT NULL CHECK(goal IN ('lose', 'maintain', 'gain')),
+    weekly_target REAL NOT NULL CHECK(weekly_target >= 0),
+    duration_weeks INTEGER NOT NULL CHECK(duration_weeks BETWEEN 1 AND 104),
+    started_on TEXT NOT NULL,
+    ended_on TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_bodyweight_phases_started_on
+    ON bodyweight_phases(started_on DESC, id DESC);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_bodyweight_phases_single_open
+    ON bodyweight_phases((1)) WHERE ended_on IS NULL;
 `;
 
 const APP_SETTINGS_SCHEMA_SQL = `
@@ -331,6 +348,18 @@ export async function migrateWorkoutSetCommentsIfNeeded(database: SchemaMigratio
   await database.execAsync("ALTER TABLE workout_sets ADD COLUMN comment TEXT");
 }
 
+export async function ensureBodyweightSchema(database: SchemaMigrationDatabase = db) {
+  await database.execAsync(BODYWEIGHT_SCHEMA_SQL);
+  const bodyweightSettingsColumns = await database.getAllAsync<ExerciseTableColumn>(
+    "PRAGMA table_info(bodyweight_settings)",
+  );
+  if (!bodyweightSettingsColumns.some((column) => column.name === "weight_unit")) {
+    await database.execAsync(
+      "ALTER TABLE bodyweight_settings ADD COLUMN weight_unit TEXT NOT NULL DEFAULT 'kg' CHECK(weight_unit IN ('kg', 'lbs'))",
+    );
+  }
+}
+
 export async function repairWorkoutSetForeignKeys(
   database: SchemaMigrationDatabase = db,
 ) {
@@ -484,16 +513,8 @@ export async function repairWorkoutSessionExerciseForeignKeys(
 
 async function initializeDatabase() {
   await db.execAsync("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
-  await db.execAsync(BODYWEIGHT_SCHEMA_SQL);
+  await ensureBodyweightSchema();
   await db.execAsync(APP_SETTINGS_SCHEMA_SQL);
-  const bodyweightSettingsColumns = await db.getAllAsync<ExerciseTableColumn>(
-    "PRAGMA table_info(bodyweight_settings)",
-  );
-  if (!bodyweightSettingsColumns.some((column) => column.name === "weight_unit")) {
-    await db.execAsync(
-      "ALTER TABLE bodyweight_settings ADD COLUMN weight_unit TEXT NOT NULL DEFAULT 'kg' CHECK(weight_unit IN ('kg', 'lbs'))",
-    );
-  }
   await db.execAsync(EXERCISES_SCHEMA_SQL);
   await rebuildLegacyExercisesTableIfNeeded();
   await db.execAsync(TRAINING_SCHEMA_SQL);

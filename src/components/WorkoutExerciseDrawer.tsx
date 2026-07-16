@@ -109,15 +109,15 @@ export function WorkoutExerciseDrawer({
               styles.drawer,
               {
                 borderColor: theme.divider,
-                paddingBottom: insets.bottom + Spacing.three,
-                paddingTop: insets.top + Spacing.three,
+                paddingBottom: insets.bottom + Spacing.md,
+                paddingTop: insets.top + Spacing.md,
               },
             ]}
           >
             <View style={styles.header}>
               <View style={styles.headerCopy}>
-                <ThemedText type="subtitle">Exercises</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+                <ThemedText type="section">Exercises</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">
                   {exercises.length} {exercises.length === 1 ? "exercise" : "exercises"} · Hold and drag to reorder
                 </ThemedText>
               </View>
@@ -206,7 +206,7 @@ function DraggableExerciseRow({
   const finishDrag = useCallback((distance: number) => {
     setDragging(false);
     Animated.spring(dragY, { toValue: 0, useNativeDriver: true }).start();
-    const targetIndex = index + Math.round(distance / (height + Spacing.two));
+    const targetIndex = index + Math.round(distance / (height + Spacing.sm));
     if (targetIndex !== index) onMove(targetIndex);
   }, [dragY, height, index, onMove]);
 
@@ -281,8 +281,8 @@ function DraggableExerciseRow({
             <Ionicons name="reorder-three" size={25} color={dragging ? theme.accent : theme.textSecondary} />
           </View>
           <View style={styles.rowCopy}>
-            <ThemedText type="smallBold" numberOfLines={1}>{exercise.exerciseName}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText type="bodyMedium" numberOfLines={1}>{exercise.exerciseName}</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
               {exercise.sets.length} {exercise.sets.length === 1 ? "set" : "sets"}
             </ThemedText>
           </View>
@@ -305,23 +305,23 @@ const styles = StyleSheet.create({
     zIndex: 80,
   },
   animatedDrawer: { bottom: 0, left: 0, position: "absolute", top: 0 },
-  drawer: { borderRightWidth: 1, flex: 1, gap: Spacing.three, paddingHorizontal: Spacing.three },
-  header: { alignItems: "center", flexDirection: "row", gap: Spacing.two },
-  headerCopy: { flex: 1, gap: Spacing.one, minWidth: 0 },
+  drawer: { borderRightWidth: 1, flex: 1, gap: Spacing.md, paddingHorizontal: Spacing.md },
+  header: { alignItems: "center", flexDirection: "row", gap: Spacing.sm },
+  headerCopy: { flex: 1, gap: Spacing.xs, minWidth: 0 },
   iconButton: { alignItems: "center", height: 44, justifyContent: "center", width: 44 },
   scroll: { flex: 1, minHeight: 0 },
-  list: { gap: Spacing.two, paddingVertical: Spacing.one },
-  footer: { borderTopWidth: 1, paddingTop: Spacing.three },
+  list: { gap: Spacing.sm, paddingVertical: Spacing.xs },
+  footer: { borderTopWidth: 1, paddingTop: Spacing.md },
   rowWrapper: { zIndex: 0 },
   draggingRow: { elevation: 8, opacity: 0.97, zIndex: 20 },
   row: {
     alignItems: "center",
-    borderRadius: Radius.large,
+    borderRadius: Radius.md,
     borderWidth: 1,
     flexDirection: "row",
     minHeight: 72,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
   },
   pressedRow: { opacity: 0.78 },
   dragHandle: { alignItems: "center", height: 48, justifyContent: "center", width: 38 },
